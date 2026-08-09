@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(command -v pdftotext)",
+      "Bash(command -v python)",
+      "Bash(command -v python3)",
+      "Bash(command -v node)",
+      "Bash(node -e \"try{require\\('pdf-parse'\\);console.log\\('pdf-parse available'\\)}catch\\(e\\){console.log\\('no pdf-parse'\\)}\")",
+      "Bash(python -c \"import pypdf; print\\('pypdf available'\\)\")",
+      "Bash(pdftotext -layout \"AI Fitness Coach Master Blueprint.pdf\" blueprint.txt)",
+      "Bash(pdftotext -layout \"🧠 PRD_ AI Fitness Coach \\(with Admin Panel\\).pdf\" prd.txt)",
+      "Bash(pdftotext -layout *PRD*.pdf prd.txt)",
+      "Bash(python -c ' *)",
+      "Bash(npx -y skills add https://github.com/anthropics/skills --skill frontend-design)"
+    ]
+  }
+}

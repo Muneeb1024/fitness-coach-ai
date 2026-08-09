@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+:root {
+  --app-bg: #F3F6FB;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#F3F6FB] text-slate-800 antialiased min-h-screen;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::selection {
+    background: #BFDBFE;
+    color: #0f172a;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+/* Component primitives live in the `components` layer so Tailwind utilities
+   (e.g. pl-11, pr-12, py-1.5) can override them on a per-element basis. */
+@layer components {
+
+/* === LIGHT SURFACE CARDS === */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid #E4EAF3;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+}
+
+.glass-card {
+  background: #ffffff;
+  border: 1px solid #E4EAF3;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.glass-light {
+  background: #F7FAFF;
+  border: 1px solid #E6EDF7;
+}
+
+/* === BUTTON SYSTEM (flat, no gradients) === */
+.btn-primary {
+  @apply px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200;
+  background: #2563EB;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:hover {
+  background: #1D4ED8;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  @apply px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200;
+  background: #ffffff;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+}
+
+.btn-secondary:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+  transform: translateY(-1px);
+}
+
+/* === INPUT SYSTEM (light) === */
+.input-field {
+  @apply w-full rounded-xl px-4 py-3 text-sm transition-all duration-200 outline-none;
+  background: #ffffff;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+}
+
+.input-field::placeholder {
+  color: #94A3B8;
+}
+
+.input-field:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* === SKELETON LOADER (flat pulse, no shimmer gradient) === */
+.skeleton {
+  @apply rounded-xl bg-slate-200 animate-pulse;
+}
+
+/* === SCROLLBAR (light) === */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #EDF1F7;
+}
+::-webkit-scrollbar-thumb {
+  background: #C7D2E0;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A9BBCF;
+}
+
+/* === STREAK FIRE ANIMATION === */
+@keyframes fire-pulse {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50% { transform: scale(1.15) rotate(3deg); }
+}
+
+.fire-animate {
+  animation: fire-pulse 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* === MOBILE RESPONSIVE UTILITIES === */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+  .mobile-full {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* === PROGRESS BAR ANIMATION === */
+.progress-bar {
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === CARD HOVER (soft lift on light) === */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+}
+
+/* === PASTEL FLAT BADGES (no gradients / glow) === */
+.badge-emerald {
+  @apply px-3 py-1 rounded-full text-xs font-bold;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+.badge-cyan {
+  @apply px-3 py-1 rounded-full text-xs font-bold;
+  background: #ECFEFF;
+  border: 1px solid #A5F3FC;
+  color: #0E7490;
+}
+
+.badge-purple {
+  @apply px-3 py-1 rounded-full text-xs font-bold;
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  color: #6D28D9;
+}
+
+.badge-amber {
+  @apply px-3 py-1 rounded-full text-xs font-bold;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #B45309;
+}
+
+.badge-rose {
+  @apply px-3 py-1 rounded-full text-xs font-bold;
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #BE123C;
+}
+
+.badge-blue {
+  @apply px-3 py-1 rounded-full text-xs font-bold;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+}
+
+}

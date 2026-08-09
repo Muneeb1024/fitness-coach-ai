@@ -1,0 +1,64 @@
+
+===== PAGE 1 =====
+Master Build Instructions: AI Fitness
+Coach
+1. Project Overview
+The AI Fitness Coach is an AI-powered platform delivering personalized diet and workout
+plans using body analysis, user goals, and continuous tracking. It is extended with a robust
+Admin Panel for monitoring, control, and optimization.
+2. Core Technology Stack
+Layer Technologies Purpose
+Frontend React, Tailwind CSS / Build separate User and
+Shadcn / Material UI Admin dashboards, Chat UI,
+and Image upload
+interfaces.
+Backend Node.js + Express Handle REST APIs and
+secure routing.
+Database MongoDB Manage strict collections
+via NoSQL structure.
+Real-Time Socket.IO Power instant chat updates
+and live tracking sync.
+AI / Vision OpenAI / Gemini, Generate plans, estimate
+MediaPipe, RAG System BMI/posture, and power
+context-aware chat.
+3. Security & Authentication
+● Auth: Implement JSON Web Tokens (JWT) for secure authentication.
+● RBAC: Enforce strict Role-Based Access Control separating user and admin roles.
+● Middleware: Utilize specific middleware functions: verifyJWT and checkRole('admin').
+4. Database Collections (MongoDB)
+Collection Name Stored Data Types
+
+===== PAGE 2 =====
+Users User accounts categorized by role (user or
+admin).
+Plans AI-generated diet and workout routines
+(deeply nested JSON).
+Progress Daily habit tracking data and weekly photo
+updates.
+Chat logs RAG chatbot conversation history.
+Admin logs System logs, AI usage logs, and error
+tracking.
+5. End User Core Features
+● AI Onboarding: Process 4 uploaded images (Front, Back, Left, Right).
+● Computer Vision: Use MediaPipe for posture detection, body landmarks, and estimated
+BMI.
+● Goal Selection: Capture user targets (Weight Loss, Gain, Muscle, or Maintenance).
+● Plan Generation: Create allergy-aware diet plans with macros/calories and detailed
+workout plans (sets, reps, weekly splits).
+● Daily Tracker: Monitor meals, water, workouts, and sleep utilizing a streak system.
+● AI Chatbot (RAG): Deliver context-aware answers based on the user's specific plan and
+progress history.
+● Weekly Progress: Facilitate photo comparisons and provide AI insights.
+6. Admin Panel Features
+● Analytics Dashboard: Monitor total/active users, plan completion rates, chat usage, and
+average fitness scores.
+● AI Output Monitoring: View generated plans, flag inaccurate outputs, and manually
+adjust AI prompt templates.
+● Plan Override: Edit AI routines, create custom templates, and assign manual plans directly
+to users.
+● Moderation: Review and delete uploaded body images, detect harmful chat queries, and
+block abusive users.
+7. System Constraints & Safety Warnings (Strict Limits)
+● Acknowledge that the AI is not medically certified.
+● Ensure all image-based body analysis is clearly labeled as approximate.
+● Enforce active moderation as a strict requirement for overall safety.
