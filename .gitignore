@@ -2,6 +2,6 @@
 .env
 .env.local
 dist/
-/uploads
-/resources
-/.agents
+uploads/
+resources/
+.agents/
