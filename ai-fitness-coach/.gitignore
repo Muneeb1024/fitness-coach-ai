@@ -2,3 +2,6 @@
 .env
 .env.local
 dist/
+*.pdf
+/uploads
+*.txt
