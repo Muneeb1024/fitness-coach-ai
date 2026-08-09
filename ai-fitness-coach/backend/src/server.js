@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 // Database connection
-connectDB();
+// connectDB();
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -112,7 +112,23 @@ app.use((err, req, res, next) => {
   });
 });
 
+
+
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`\x1b[32m🚀 [Server Ready]\x1b[0m AI Fitness Coach API v2.0 running on port ${PORT}`);
-});
+
+const startServer = async () => {
+    try {
+        await connectDB();
+
+        server.listen(PORT, () => {
+            console.log(
+                `[Server Ready] AI Fitness Coach API running on port ${PORT}`
+            );
+        });
+    } catch (error) {
+        console.error('[Startup Error] Failed to start server.');
+        process.exit(1);
+    }
+};
+
+startServer();
