@@ -28,11 +28,11 @@ const userSchema = new mongoose.Schema(
       }
     },
     goals: {
-      primaryGoal: {
-        type: String,
-        enum: ['Weight Loss', 'Weight Gain', 'Muscle Gain', 'Maintenance'],
-        default: 'Maintenance'
-      },
+     primaryGoal: {
+  type: String,
+  enum: ['weight_loss', 'muscle_gain', 'maintenance', 'athletic'],
+  default: 'maintenance'
+},
       targetWeightKg: { type: Number, default: 70 },
       allergies: [{ type: String }],
       activityLevel: { type: String, default: 'Moderate' },
