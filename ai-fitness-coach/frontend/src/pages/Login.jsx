@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
-import { Dumbbell, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Dumbbell, Eye, EyeOff, ArrowRight, User } from 'lucide-react';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -31,6 +31,11 @@ export default function Login() {
     }
   };
 
+  const handleQuickFill = (email, password) => {
+    setForm({ email, password });
+    toast.success(`Loaded demo credentials for ${email}`);
+  };
+
   return (
     <div className="min-h-[calc(100vh-72px)] flex items-center justify-center px-4 py-12">
 
@@ -52,21 +57,18 @@ export default function Login() {
             <Dumbbell className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900">Welcome Back</h1>
-          <p className="text-slate-500 text-sm mt-1">Sign in to your AI Fitness Coach account</p>
+          <p className="text-slate-500 text-sm mt-1">Sign in to your FitVision AI account</p>
         </div>
 
-        {/* Demo Quick Fill */}
-        <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200/60 flex items-center justify-between">
-          <div className="text-xs">
-            <p className="font-bold text-blue-900">Demo User Account</p>
-            <p className="text-slate-500 text-[11px]">user@fitvision.ai</p>
-          </div>
+        {/* User Quick Login */}
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Quick Login</p>
           <button
             type="button"
-            onClick={() => setForm({ email: 'user@fitvision.ai', password: 'password123' })}
-            className="py-1.5 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold transition-all shadow-sm active:scale-95"
+            onClick={() => handleQuickFill('user@fitvision.ai', 'password123')}
+            className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/25 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
           >
-            Auto Fill
+            <User className="w-4 h-4 text-emerald-600" /> User
           </button>
         </div>
 
@@ -117,11 +119,17 @@ export default function Login() {
           </motion.button>
         </form>
 
-        <div className="pt-4 border-t border-slate-200 text-center">
+        <div className="pt-4 border-t border-slate-200 text-center space-y-2">
           <p className="text-sm text-slate-500">
             Don't have an account?{' '}
             <Link to="/signup" className="text-blue-600 font-bold hover:text-blue-700 transition-colors">
               Start Free →
+            </Link>
+          </p>
+          <p className="text-xs text-slate-400">
+            Administrator?{' '}
+            <Link to="/admin/login" className="text-purple-600 font-bold hover:text-purple-700 transition-colors">
+              Go to Dedicated Admin Portal →
             </Link>
           </p>
         </div>
