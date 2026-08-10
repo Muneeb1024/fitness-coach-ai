@@ -256,10 +256,10 @@ export default function Onboarding() {
                 onChange={(e) => setPrimaryGoal(e.target.value)}
                 className="input-field"
               >
-                <option value="Weight Loss">Weight Loss</option>
-                <option value="Weight Gain">Weight Gain</option>
-                <option value="Muscle Gain">Muscle Gain</option>
-                <option value="Maintenance">Maintenance</option>
+                <option value="weight_loss">Weight Loss</option>
+<option value="muscle_gain">Muscle Gain</option>
+<option value="maintenance">Maintenance</option>
+<option value="athletic">Athletic Performance</option>
               </select>
             </div>
 
