@@ -25,7 +25,7 @@
 
 <br/>
 
-[🚀 Live Demo](https://fitvision-ai.vercel.app) &nbsp;|&nbsp; [🔐 Admin Panel](#admin-panel) &nbsp;|&nbsp; [📖 Docs](#getting-started) &nbsp;|&nbsp; [🛠️ Tech Stack](#tech-stack)
+[🚀 Live Demo](https://fitness-coach-ai-six.vercel.app/) &nbsp;|&nbsp; [🔐 Admin Panel](#admin-panel) &nbsp;|&nbsp; [📖 Docs](#getting-started) &nbsp;|&nbsp; [🛠️ Tech Stack](#tech-stack)
 
 </div>
 
@@ -253,7 +253,6 @@ fitness-coach-ai/
 ## 🗺️ Roadmap — What's Coming Next
 
 - [ ] **Real-time AI Vision Analysis** — Live webcam-based posture analysis using MediaPipe running in-browser
-- [ ] **Stripe Payment Integration** — Real subscription billing with webhooks
 - [ ] **Push Notifications** — Daily reminders for water, meals, and workouts via web push
 - [ ] **Wearable Integration** — Sync with Apple Health, Google Fit, and Fitbit APIs
 - [ ] **Social Features** — Community leaderboards, challenge groups, progress sharing
