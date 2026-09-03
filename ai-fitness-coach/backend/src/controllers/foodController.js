@@ -17,7 +17,7 @@ export const analyzeFood = async (req, res) => {
       return res.status(400).json({ message: 'Image data is required' });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
     const prompt = `You are an expert nutritionist AI for FitVision fitness app.
 

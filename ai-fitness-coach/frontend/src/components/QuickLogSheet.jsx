@@ -80,10 +80,10 @@ export default function QuickLogSheet({ progress, onUpdate }) {
 
   return (
     <>
-      {/* Floating Pill Trigger */}
+      {/* Floating Pill Trigger — sits above BottomNav on mobile */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-5 py-3 rounded-full bg-[#16181C] border border-[#B8FD02]/50 text-[#B8FD02] text-xs font-black uppercase tracking-wider shadow-xl hover:bg-[#B8FD02] hover:text-[#0B0C0E] transition-all duration-200 group"
+        className="fixed bottom-[88px] sm:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-5 py-3 rounded-full bg-[#16181C] border border-[#B8FD02]/50 text-[#B8FD02] text-xs font-black uppercase tracking-wider shadow-xl hover:bg-[#B8FD02] hover:text-[#0B0C0E] transition-all duration-200 group"
       >
         <ChevronUp className="w-4 h-4 group-hover:scale-110 transition-transform" />
         Quick Log
@@ -106,7 +106,7 @@ export default function QuickLogSheet({ progress, onUpdate }) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#16181C] border-t border-slate-700 rounded-t-3xl p-6 pb-10 shadow-2xl"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-[#16181C] border-t border-slate-700 rounded-t-3xl p-5 pb-[calc(env(safe-area-inset-bottom)+80px)] sm:pb-10 shadow-2xl max-h-[85vh] overflow-y-auto"
             >
               {/* Handle */}
               <div className="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-5" />

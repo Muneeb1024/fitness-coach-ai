@@ -36,7 +36,7 @@ export default function BottomNav() {
               <>
                 {/* Calorie scanner: floating center pill */}
                 {tab.highlight ? (
-                  <div className={`relative -mt-4 w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border-2 transition-all duration-300 ${
+                  <div className={`relative -mt-3 w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border-2 transition-all duration-300 ${
                     isActive
                       ? 'bg-[#B8FD02] border-[#B8FD02] shadow-[#B8FD02]/40'
                       : 'bg-[#16181C] border-slate-700 shadow-black/50'

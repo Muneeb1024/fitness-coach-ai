@@ -70,20 +70,21 @@ export default function ChatWidget() {
   if (!user || user.role === 'admin') return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-[88px] sm:bottom-6 right-3 sm:right-6 z-50 max-w-[calc(100vw-1.5rem)] sm:max-w-none">
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-3 px-5 py-3.5 rounded-full bg-[#B8FD02] text-[#0B0C0E] font-black shadow-xl shadow-[#B8FD02]/25 hover:scale-105 hover:shadow-2xl transition-all border border-[#B8FD02] uppercase tracking-wider text-xs"
+          className="group relative flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-full bg-[#B8FD02] text-[#0B0C0E] font-black shadow-xl shadow-[#B8FD02]/25 hover:scale-105 hover:shadow-2xl transition-all border border-[#B8FD02] uppercase tracking-wider text-xs"
         >
-          <Bot className="w-5 h-5 text-[#0B0C0E]" />
-          <span>Ask AI Coach</span>
+          <Bot className="w-5 h-5 text-[#0B0C0E] shrink-0" />
+          <span className="hidden sm:inline">Ask AI Coach</span>
+          <span className="sm:hidden">AI Coach</span>
           <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#CCFF00] animate-ping" />
         </button>
       )}
 
       {isOpen && (
-        <div className="w-[380px] h-[520px] bg-[#16181C] border border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed sm:relative inset-0 sm:inset-auto bottom-0 sm:bottom-auto right-0 sm:right-auto w-full sm:w-[380px] h-full sm:h-[520px] bg-[#16181C] border-0 sm:border border-slate-800 rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 z-50">
           {/* Header */}
           <div className="p-4 bg-[#0B0C0E] border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
