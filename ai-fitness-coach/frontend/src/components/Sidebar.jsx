@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Dumbbell, LayoutDashboard, Sparkles, TrendingUp,
   User as UserIcon, Gift, LogOut, Users, Sliders,
-  ShieldAlert, ChevronRight, MessageSquare, Zap
+  ShieldAlert, ChevronRight, MessageSquare, Zap, Flame
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
@@ -23,6 +23,7 @@ export default function Sidebar({ onCloseMobile }) {
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: "Today's Protocol" },
     { to: '/plans', label: 'My Plans', icon: Sparkles, desc: 'AI Diet & Workout' },
     { to: '/progress', label: 'Progress', icon: TrendingUp, desc: 'Biometric Timeline' },
+    { to: '/calories', label: 'Calorie Scanner', icon: Flame, desc: 'AI Food Analysis', badge: 'AI' },
     { to: '/profile', label: 'Profile Hub', icon: UserIcon, desc: 'Posture & Details' },
     { to: '/pricing', label: 'Beta Access', icon: Gift, badge: 'FOUNDER' },
   ];

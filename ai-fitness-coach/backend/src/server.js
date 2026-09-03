@@ -14,6 +14,7 @@ import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
+import foodRoutes from './routes/foodRoutes.js';
 
 dotenv.config();
 
@@ -44,9 +45,9 @@ const io = new Server(server, {
   cors: { origin: allowedOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] }
 });
 
-// Global middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Global middleware — 20mb for base64 food image uploads
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Request logger
 app.use((req, res, next) => {
@@ -81,6 +82,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/insight', insightRoutes);
+app.use('/api/food', foodRoutes);
 
 // Socket.IO
 io.on('connection', (socket) => {

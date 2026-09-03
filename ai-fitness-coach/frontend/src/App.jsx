@@ -12,6 +12,7 @@ import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Plans from './pages/Plans';
 import Progress from './pages/Progress';
+import Calories from './pages/Calories';
 import Subscription from './pages/Subscription';
 import Profile from './pages/Profile';
 import AdminLogin from './pages/admin/AdminLogin';
@@ -92,6 +93,9 @@ export default function App() {
             } />
             <Route path="/progress" element={
               <ProtectedRoute><AppLayout><PageWrapper><Progress /></PageWrapper></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/calories" element={
+              <ProtectedRoute><AppLayout><PageWrapper><Calories /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/pricing" element={
               user ? (

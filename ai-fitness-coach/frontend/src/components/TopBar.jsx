@@ -5,12 +5,13 @@ import { Menu, Dumbbell, Sparkles, Flame, Calendar as CalendarIcon } from 'lucid
 import ThemeToggle from './ThemeToggle';
 
 const PAGE_TITLES = {
-  '/dashboard': { title: 'Today\'s Protocol & Dashboard', subtitle: 'Live biometric tracking & daily nutrition' },
-  '/plans': { title: 'Personalized AI Fitness Plans', subtitle: 'Gemini AI generated nutrition & workout splits' },
-  '/progress': { title: 'Biometric Timeline & Analytics', subtitle: 'Long-term body composition & habit trends' },
-  '/profile': { title: 'Complete Health & Posture Hub', subtitle: 'Manage biometrics, 4-angle scan, and equipment' },
+  '/dashboard': { title: "Today's Protocol", subtitle: 'Live biometric tracking & daily nutrition' },
+  '/plans': { title: 'AI Fitness Plans', subtitle: 'Gemini AI generated nutrition & workout splits' },
+  '/progress': { title: 'Biometric Timeline', subtitle: 'Long-term body composition & habit trends' },
+  '/calories': { title: 'AI Calorie Scanner', subtitle: 'Gemini Vision food analysis & daily log' },
+  '/profile': { title: 'Health & Posture Hub', subtitle: 'Manage biometrics, 4-angle scan, equipment' },
   '/pricing': { title: 'Founder Beta Access', subtitle: '100% unlocked public beta features' },
-  '/admin': { title: 'Administrator Control Center', subtitle: 'Real-time platform analytics and system health' },
+  '/admin': { title: 'Admin Control Center', subtitle: 'Real-time platform analytics and system health' },
   '/admin/users': { title: 'User Management', subtitle: 'Manage accounts and member privileges' },
   '/admin/ai-monitor': { title: 'AI Output & Prompts', subtitle: 'Monitor Gemini responses and system prompts' },
   '/admin/plan-override': { title: 'Plan Override Studio', subtitle: 'Directly modify user workout and diet plans' },
@@ -71,11 +72,11 @@ export default function TopBar({ onOpenMobileMenu }) {
           <span>{todayStr}</span>
         </div>
 
-        {/* Streak Flame Badge */}
+        {/* Streak Flame Badge — compact on mobile */}
         {!isAdmin && user?.streakCount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400 text-xs font-black">
-            <Flame className="w-3.5 h-3.5 text-orange-400" />
-            <span>{user.streakCount} Day Streak</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400 text-xs font-black">
+            <Flame className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+            <span>{user.streakCount}<span className="hidden sm:inline"> Day Streak</span></span>
           </div>
         )}
 
