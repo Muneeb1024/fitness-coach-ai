@@ -16,7 +16,7 @@ export default function Onboarding() {
   const [weightKg, setWeightKg] = useState(70);
   const [age, setAge] = useState(25);
   const [gender, setGender] = useState('Male');
-  const [primaryGoal, setPrimaryGoal] = useState('Muscle Gain');
+  const [primaryGoal, setPrimaryGoal] = useState('muscle_gain');
   const [targetWeightKg, setTargetWeightKg] = useState(75);
   const [workoutPreference, setWorkoutPreference] = useState('Gym');
   const [allergies, setAllergies] = useState('Peanuts, Dairy');
@@ -37,7 +37,7 @@ export default function Onboarding() {
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
-    const toastId = toast.loading('Running MediaPipe analysis & generating Gemini AI plan...');
+    const toastId = toast.loading('Running SoftnoveX MediaPipe analysis & generating Gemini AI plan...');
 
     try {
       const res = await API.post('/user/onboarding', {
@@ -53,7 +53,7 @@ export default function Onboarding() {
       });
 
       updateUserState(res.data.user);
-      toast.success('AI Onboarding Complete! 🎉', { id: toastId });
+      toast.success('AI Biometric Analysis Complete! 🎉', { id: toastId });
       navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to complete AI onboarding.', { id: toastId });
@@ -62,27 +62,27 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6 text-slate-100">
       {/* Step Progress Bar */}
       <div className="flex items-center justify-between mb-8">
         {[
-          { num: 1, label: 'Body Metrics' },
-          { num: 2, label: '4-Angle Photos' },
-          { num: 3, label: 'Goals & Restrictions' }
+          { num: 1, label: 'Biometric Metrics' },
+          { num: 2, label: '4-Angle Pose Scan' },
+          { num: 3, label: 'Goals & Allergies' }
         ].map((s) => (
           <div key={s.num} className="flex items-center gap-3">
             <div
               className={`w-9 h-9 rounded-xl font-bold flex items-center justify-center text-xs transition-all ${
                 step === s.num
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 border border-emerald-400/40'
                   : step > s.num
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-slate-100 text-slate-500 border border-slate-200'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-slate-900 text-slate-500 border border-slate-800'
               }`}
             >
               {step > s.num ? <CheckCircle2 className="w-4 h-4" /> : s.num}
             </div>
-            <span className={`text-sm font-semibold hidden sm:inline ${step === s.num ? 'text-slate-900' : 'text-slate-500'}`}>
+            <span className={`text-sm font-semibold hidden sm:inline ${step === s.num ? 'text-white' : 'text-slate-400'}`}>
               {s.label}
             </span>
           </div>
@@ -94,19 +94,19 @@ export default function Onboarding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 space-y-6"
+          className="glass-panel p-6 sm:p-8 rounded-3xl space-y-6"
         >
           <div>
             <span className="badge-emerald inline-flex items-center gap-1.5 mb-2">
               <Sliders className="w-3 h-3" /> Step 1 of 3
             </span>
-            <h2 className="text-2xl font-bold text-slate-900">Basic Body Profile</h2>
-            <p className="text-sm text-slate-500 mt-1">Provide your initial measurements for MediaPipe landmark comparison</p>
+            <h2 className="text-2xl font-bold text-white">Biometric Baseline</h2>
+            <p className="text-sm text-slate-400 mt-1">Provide your initial measurements for landmark calibration & BMI modeling</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Height (cm)</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Height (cm)</label>
               <input
                 type="number"
                 value={heightCm}
@@ -115,7 +115,7 @@ export default function Onboarding() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Current Weight (kg)</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Current Weight (kg)</label>
               <input
                 type="number"
                 value={weightKg}
@@ -124,7 +124,7 @@ export default function Onboarding() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Age</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Age</label>
               <input
                 type="number"
                 value={age}
@@ -133,7 +133,7 @@ export default function Onboarding() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Gender</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Gender</label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
@@ -162,40 +162,40 @@ export default function Onboarding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 space-y-6"
+          className="glass-panel p-6 sm:p-8 rounded-3xl space-y-6"
         >
           <div>
             <span className="badge-cyan inline-flex items-center gap-1.5 mb-2">
               <Camera className="w-3 h-3" /> Step 2 of 3
             </span>
-            <h2 className="text-2xl font-bold text-slate-900">4-Angle Photo Analysis</h2>
-            <p className="text-sm text-slate-500 mt-1">Upload Front, Back, Left, and Right photos for MediaPipe posture detection</p>
+            <h2 className="text-2xl font-bold text-white">4-Angle Computer Vision Scan</h2>
+            <p className="text-sm text-slate-400 mt-1">Upload Front, Back, Left, and Right posture photos for 33-point pose detection</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs flex items-center gap-3">
-            <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600" />
-            <span>Note: Visual body analysis provides posture alignment & estimated BMI approximations. All uploads are encrypted.</span>
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-3">
+            <ShieldAlert className="w-5 h-5 shrink-0 text-amber-400" />
+            <span>Encrypted transmission: Photos are processed strictly for biometric alignment and posture analysis.</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {['front', 'back', 'left', 'right'].map((angle) => (
               <div key={angle} className="space-y-2">
-                <label className="block text-xs font-bold uppercase text-slate-500 tracking-wider text-center capitalize">{angle} View</label>
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-slate-200 hover:border-blue-500 transition-all group bg-slate-100 flex flex-col items-center justify-center">
+                <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider text-center capitalize">{angle} View</label>
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-slate-800 hover:border-emerald-500 transition-all group bg-slate-900 flex flex-col items-center justify-center">
                   {images[angle] ? (
                     <img src={images[angle]} alt={angle} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   ) : (
                     <div className="p-4 text-center space-y-1">
-                      <Camera className="w-6 h-6 text-slate-400 mx-auto" />
-                      <p className="text-[11px] font-semibold text-slate-500">Upload {angle} photo</p>
+                      <Camera className="w-6 h-6 text-slate-500 mx-auto" />
+                      <p className="text-[11px] font-semibold text-slate-400">Upload {angle} view</p>
                     </div>
                   )}
 
                   {/* File Upload Overlay */}
-                  <label className="absolute inset-0 bg-slate-900/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity p-3 text-center space-y-2">
-                    <Camera className="w-6 h-6 text-white" />
-                    <span className="text-xs font-bold text-white bg-blue-600 px-3 py-1.5 rounded-xl shadow-md">
-                      Upload Real Photo
+                  <label className="absolute inset-0 bg-slate-950/85 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity p-3 text-center space-y-2">
+                    <Camera className="w-6 h-6 text-emerald-400" />
+                    <span className="text-xs font-bold text-white bg-emerald-600 px-3 py-1.5 rounded-xl shadow-md">
+                      Upload Photo
                     </span>
                     <input
                       type="file"
@@ -238,33 +238,33 @@ export default function Onboarding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 space-y-6"
+          className="glass-panel p-6 sm:p-8 rounded-3xl space-y-6"
         >
           <div>
             <span className="badge-purple inline-flex items-center gap-1.5 mb-2">
               <Sparkles className="w-3 h-3" /> Step 3 of 3
             </span>
-            <h2 className="text-2xl font-bold text-slate-900">Goals & Restrictions</h2>
-            <p className="text-sm text-slate-500 mt-1">Configure your primary goal and food allergies for Gemini AI plan generation</p>
+            <h2 className="text-2xl font-bold text-white">Training Goals & Dietary Allergies</h2>
+            <p className="text-sm text-slate-400 mt-1">Configure parameters for Gemini AI nutrition and workout generation</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Primary Fitness Goal</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Primary Objective</label>
               <select
                 value={primaryGoal}
                 onChange={(e) => setPrimaryGoal(e.target.value)}
                 className="input-field"
               >
-                <option value="weight_loss">Weight Loss</option>
-<option value="muscle_gain">Muscle Gain</option>
-<option value="maintenance">Maintenance</option>
-<option value="athletic">Athletic Performance</option>
+                <option value="weight_loss">Fat Loss & Metabolic Deficit</option>
+                <option value="muscle_gain">Hypertrophy & Muscle Gain</option>
+                <option value="maintenance">Maintenance & Vital Fitness</option>
+                <option value="athletic">Athletic Power & Performance</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Target Weight (kg)</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Target Weight (kg)</label>
               <input
                 type="number"
                 value={targetWeightKg}
@@ -274,20 +274,20 @@ export default function Onboarding() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Workout Preference</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Workout Preference</label>
               <select
                 value={workoutPreference}
                 onChange={(e) => setWorkoutPreference(e.target.value)}
                 className="input-field"
               >
-                <option value="Gym">Gym Equipment Split</option>
-                <option value="Home">Home Bodyweight Split</option>
-                <option value="Hybrid">Hybrid Mix</option>
+                <option value="Gym">Gym Facility Equipment Split</option>
+                <option value="Home">Home Bodyweight & Calisthenics</option>
+                <option value="Hybrid">Hybrid Functional Mix</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Food Allergies / Intolerances</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Food Allergies / Exclusions</label>
               <input
                 type="text"
                 value={allergies}
@@ -298,7 +298,7 @@ export default function Onboarding() {
             </div>
           </div>
 
-          <div className="flex justify-between pt-6 border-t border-slate-200">
+          <div className="flex justify-between pt-6 border-t border-slate-800">
             <button onClick={() => setStep(2)} className="btn-secondary">
               Back
             </button>
@@ -312,7 +312,7 @@ export default function Onboarding() {
               {loading ? (
                 <>
                   <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  Generating Gemini AI Plan...
+                  Generating SoftnoveX AI Plan...
                 </>
               ) : (
                 <>

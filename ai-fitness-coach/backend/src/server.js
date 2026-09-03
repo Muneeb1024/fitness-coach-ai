@@ -13,6 +13,7 @@ import progressRoutes from './routes/progressRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
+import insightRoutes from './routes/insightRoutes.js';
 
 dotenv.config();
 
@@ -79,6 +80,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/insight', insightRoutes);
 
 // Socket.IO
 io.on('connection', (socket) => {

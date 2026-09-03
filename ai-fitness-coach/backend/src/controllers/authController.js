@@ -25,7 +25,7 @@ export const registerUser = async (req, res) => {
         goals: goals || { primaryGoal: 'Maintenance' }
       });
 
-      const token = jwt.sign({ userId: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ userId: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
       return res.status(201).json({
         message: 'Account registered successfully',
         token,
@@ -57,7 +57,7 @@ export const registerUser = async (req, res) => {
     };
 
     memoryStore.users.push(newUser);
-    const token = jwt.sign({ userId: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
     res.status(201).json({
       message: 'Account registered successfully (Local Storage)',
@@ -84,7 +84,7 @@ export const loginUser = async (req, res) => {
       user.lastActiveDate = new Date();
       await user.save();
 
-      const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
       return res.json({
         message: 'Login successful',
         token,
@@ -110,7 +110,7 @@ export const loginUser = async (req, res) => {
       return res.status(403).json({ message: 'Account is banned by administrator.' });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({
       message: 'Login successful',
       token,
@@ -123,7 +123,30 @@ export const loginUser = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    res.json({ user: req.user });
+    // Issue a fresh token so sessions silently auto-extend on page load
+    const freshToken = jwt.sign(
+      { userId: req.user._id, role: req.user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    const userOut = {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      avatar: req.user.avatar || '',
+      role: req.user.role,
+      status: req.user.status,
+      goals: req.user.goals,
+      bodyMetrics: req.user.bodyMetrics,
+      profileImages: req.user.profileImages,
+      streakCount: req.user.streakCount,
+      fitnessScore: req.user.fitnessScore,
+      badges: req.user.badges || [],
+      weeklyChallenge: req.user.weeklyChallenge || {}
+    };
+
+    res.json({ user: userOut, token: freshToken });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

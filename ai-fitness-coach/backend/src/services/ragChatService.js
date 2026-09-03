@@ -38,17 +38,61 @@ export const answerUserChatQuery = async ({ user, query }) => {
   // Ensure recentProgress is always an array
   if (!Array.isArray(recentProgress)) recentProgress = [];
 
+  // === REAL-TIME TODAY CONTEXT: fetch today's actual progress ===
+  const todayStr = new Date().toISOString().split('T')[0];
+  let todayProgress = null;
+  try {
+    if (isDbConnected) {
+      todayProgress = await Progress.findOne({ userId: user._id, date: todayStr });
+    } else {
+      todayProgress = (memoryStore.progressLogs || []).find(
+        (p) => String(p.userId) === String(user._id) && p.date === todayStr
+      );
+    }
+  } catch (_) {}
+
+  const mealsConsumed = todayProgress?.mealsLogged?.filter((m) => m.consumed) || [];
+  const caloriesConsumedToday = mealsConsumed.reduce((sum, m) => sum + (m.calories || 0), 0);
+  const mealTarget = activePlan?.dietPlan?.dailyCalories || 2200;
+  const caloriesRemaining = Math.max(0, mealTarget - caloriesConsumedToday);
+  const mealsConsumedNames = mealsConsumed.map((m) => m.mealName).join(', ') || 'None yet';
+  const waterToday = todayProgress?.waterMl || 0;
+  const workoutDoneToday = todayProgress?.workoutCompleted || false;
+  const sleepLastNight = todayProgress?.sleepHours ?? 7;
+  // ================================================================
+
   const contextData = {
     userName: user?.name || 'User',
     goal: user?.goals?.primaryGoal || 'Fitness Maintenance',
+    experienceLevel: user?.goals?.experienceLevel || 'Beginner',
+    dietPreference: user?.goals?.dietPreference || 'Balanced',
     allergies: user?.goals?.allergies || [],
+    availableEquipment: user?.goals?.availableEquipment || [],
+    injuries: user?.goals?.injuries || [],
+    customLimitations: user?.goals?.customLimitations || '',
+    postureStatus: user?.bodyMetrics?.postureStatus || 'Normal posture detected',
     estimatedBmi: user?.bodyMetrics?.estimatedBmi || 22.8,
+    weightKg: user?.bodyMetrics?.weightKg || 70,
+    targetWeightKg: user?.goals?.targetWeightKg || 70,
+    activityLevel: user?.goals?.activityLevel || 'Moderate',
+    workoutPreference: user?.goals?.workoutPreference || 'Gym',
     dailyCalories: activePlan?.dietPlan?.dailyCalories || 2200,
     macros: activePlan?.dietPlan?.macros || null,
     meals: activePlan?.dietPlan?.meals || [],
     workoutSplit: activePlan?.workoutPlan?.splitType || 'Full Body',
     workoutSchedule: activePlan?.workoutPlan?.frequencyDaysPerWeek || 3,
     streakDays: user?.streakCount || 0,
+    fitnessScore: user?.fitnessScore || 75,
+    // Today's real-time data
+    today: {
+      date: todayStr,
+      caloriesConsumed: caloriesConsumedToday,
+      caloriesRemaining,
+      mealsConsumedNames,
+      waterMl: waterToday,
+      workoutCompleted: workoutDoneToday,
+      sleepHours: sleepLastNight
+    },
     recentProgressLogs: recentProgress.map((p) => ({
       date: p.date,
       waterMl: p.waterMl,
@@ -83,27 +127,43 @@ export const answerUserChatQuery = async ({ user, query }) => {
   const ragPrompt = `System Instructions:
 ${editableSystemPrompt}
 
-You are the AI Fitness Coach for ${contextData.userName}.
+You are the AI Fitness Coach for ${contextData.userName}, powered by SoftnoveX FitVision AI.
 
-Context Data:
-- Primary Goal: ${contextData.goal}
-- Allergies: ${contextData.allergies.join(', ') || 'None'}
-- Estimated BMI: ${contextData.estimatedBmi}
-- Assigned Diet Calories: ${contextData.dailyCalories} kcal/day
+=== DETAILED ATHLETIC & BIOMETRIC PROFILE ===
+- Primary Goal: ${contextData.goal} | Experience Level: ${contextData.experienceLevel}
+- Body Weight: ${contextData.weightKg} kg | Target: ${contextData.targetWeightKg} kg | BMI: ${contextData.estimatedBmi}
+- Posture Analysis: ${contextData.postureStatus}
+- Available Equipment: ${contextData.availableEquipment.join(', ') || 'Standard gym / dumbbells'}
+- Physical Injuries / Limitations: ${contextData.injuries.join(', ') || 'None reported'}${contextData.customLimitations ? ` (${contextData.customLimitations})` : ''}
+- Diet Style: ${contextData.dietPreference} | Allergies: ${contextData.allergies.join(', ') || 'None'}
+- Activity Level: ${contextData.activityLevel} | Location: ${contextData.workoutPreference}
+- Habit Streak: ${contextData.streakDays} days | Fitness Score: ${contextData.fitnessScore}/100
+
+=== ASSIGNED PLAN ===
+- Daily Calorie Target: ${contextData.dailyCalories} kcal
 - Daily Macros: ${macroSummary}
-- Today's Meal Plan: ${mealSummary}
-- Assigned Workout Routine: ${contextData.workoutSplit} (${contextData.workoutSchedule} days/week)
-- Current Habit Streak: ${contextData.streakDays} days
-- Recent Progress History: ${JSON.stringify(contextData.recentProgressLogs)}
+- Meal Plan: ${mealSummary}
+- Workout Routine: ${contextData.workoutSplit} (${contextData.workoutSchedule} days/week)
+
+=== TODAY'S REAL-TIME PROGRESS (${contextData.today.date}) ===
+- Calories Consumed So Far: ${contextData.today.caloriesConsumed} kcal
+- Calories Remaining Today: ${contextData.today.caloriesRemaining} kcal
+- Meals Already Eaten: ${contextData.today.mealsConsumedNames}
+- Water Intake Today: ${contextData.today.waterMl} ml (goal: 2500 ml)
+- Workout Completed Today: ${contextData.today.workoutCompleted ? 'YES' : 'NOT YET'}
+- Sleep Last Night: ${contextData.today.sleepHours} hours
+
+=== RECENT HISTORY ===
+${JSON.stringify(contextData.recentProgressLogs)}
 
 User Question: "${query}"
 
-Guidelines:
-- Give an encouraging, clear, and actionable response based on THEIR context above.
-- When the user asks about meals or foods, reference the actual meal plan items listed above.
-- When the user asks about workouts or exercises, reference their assigned routine.
-- Respect their allergies.
-- Reminder: You are an AI assistant and not a medical doctor.
+=== RESPONSE GUIDELINES ===
+- CRITICAL SAFETY: Never prescribe exercises that aggravate the user's listed injuries (${contextData.injuries.join(', ') || 'None'}). If they have knee or lower back issues, provide safe joint-friendly alternatives.
+- Tailor all exercise suggestions to their Available Equipment (${contextData.availableEquipment.join(', ') || 'Gym'}).
+- If they ask for food advice, strictly respect their Diet Style (${contextData.dietPreference}) and Allergies.
+- Be encouraging, concise, and actionable. Max 150 words.
+- You are an AI assistant, not a doctor. Do not make medical diagnoses.
 
 Response:`;
 

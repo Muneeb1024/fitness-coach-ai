@@ -17,15 +17,28 @@ export const AuthProvider = ({ children }) => {
       try {
         const res = await API.get('/auth/me');
         setUser(res.data.user);
+
+        // Silently rotate the token if the backend issued a fresh one
+        if (res.data.token && res.data.token !== token) {
+          localStorage.setItem('fitness_auth_token', res.data.token);
+          setToken(res.data.token);
+        }
       } catch (err) {
-        console.error('[Auth Init Error]', err);
+        // The response interceptor in api.js already handles 401 logout + redirect.
+        // Just clear state here in case the error is non-401.
+        console.error('[Auth Init Error]', err.response?.status, err.message);
+        if (err.response?.status !== 401) {
+          // Non-auth error (network down etc.) — don't log out, just stop loading
+          setLoading(false);
+          return;
+        }
         logout();
       } finally {
         setLoading(false);
       }
     };
     fetchMe();
-  }, [token]);
+  }, []); // Run once on mount — token rotation doesn't re-trigger this
 
   const login = (userData, authToken) => {
     localStorage.setItem('fitness_auth_token', authToken);
@@ -39,8 +52,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const updateUserState = (updatedUser) => {
-    setUser((prev) => ({ ...prev, ...updatedUser }));
+  const updateUserState = (updatedFields) => {
+    setUser((prev) => ({ ...prev, ...updatedFields }));
   };
 
   return (

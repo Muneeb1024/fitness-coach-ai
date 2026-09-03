@@ -1,8 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --app-bg: #F3F6FB;
+  /* Official FitVision Athletic Palette */
+  --c-black: #0B0C0E;
+  --c-black-88: #16181C;
+  --c-black-surface: #1B1E24;
+  --c-fit-green: #B8FD02; /* High-voltage Athletic Fit Green */
+  --c-fit-green-alt: #CCFF00;
+  --c-fit-green-40: rgba(184, 253, 2, 0.4);
+  --c-white: #FEF9F5;
 }
 
 @layer base {
@@ -14,58 +21,85 @@
     scroll-behavior: smooth;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
   body {
-    @apply bg-[#F3F6FB] text-slate-800 antialiased min-h-screen;
-    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #0B0C0E;
+    color: #FEF9F5;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-image: 
+      radial-gradient(at 100% 0%, rgba(184, 253, 2, 0.07) 0px, transparent 45%),
+      radial-gradient(at 0% 100%, rgba(184, 253, 2, 0.03) 0px, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* === LIGHT THEME BASE OVERRIDES === */
+  html.light body {
+    background-color: #FEF9F5;
+    color: #0B0C0E;
+    background-image: 
+      radial-gradient(at 100% 0%, rgba(184, 253, 2, 0.18) 0px, transparent 45%),
+      radial-gradient(at 0% 100%, rgba(11, 12, 14, 0.04) 0px, transparent 50%);
   }
 
   ::selection {
-    background: #BFDBFE;
-    color: #0f172a;
+    background: #B8FD02;
+    color: #0B0C0E;
   }
 
   :focus-visible {
-    outline: 2px solid rgba(37, 99, 235, 0.5);
+    outline: 2px solid #B8FD02;
     outline-offset: 2px;
   }
 }
 
-/* Component primitives live in the `components` layer so Tailwind utilities
-   (e.g. pl-11, pr-12, py-1.5) can override them on a per-element basis. */
 @layer components {
 
-/* === LIGHT SURFACE CARDS === */
+/* === ATHLETIC SURFACE PANELS === */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid #E4EAF3;
-  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+  background: rgba(22, 24, 28, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(254, 249, 245, 0.08);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.7);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .glass-card {
-  background: #ffffff;
-  border: 1px solid #E4EAF3;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  background: rgba(27, 30, 36, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(254, 249, 245, 0.07);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .glass-light {
-  background: #F7FAFF;
-  border: 1px solid #E6EDF7;
+  background: rgba(35, 39, 47, 0.7);
+  border: 1px solid rgba(254, 249, 245, 0.1);
 }
 
-/* === BUTTON SYSTEM (flat, no gradients) === */
+/* === BUTTON SYSTEM (FIT GREEN VOLT) === */
 .btn-primary {
-  @apply px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200;
-  background: #2563EB;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  @apply px-6 py-3 rounded-xl font-extrabold text-sm transition-all duration-200 inline-flex items-center justify-center gap-2 tracking-tight;
+  background: #B8FD02;
+  color: #0B0C0E;
+  box-shadow: 0 4px 20px rgba(184, 253, 2, 0.35);
 }
 
 .btn-primary:hover {
-  background: #1D4ED8;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  background: #CCFF00;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(184, 253, 2, 0.55);
 }
 
 .btn-primary:active {
@@ -73,134 +107,209 @@
 }
 
 .btn-secondary {
-  @apply px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200;
-  background: #ffffff;
-  border: 1px solid #CBD5E1;
-  color: #475569;
+  @apply px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 inline-flex items-center justify-center gap-2;
+  background: rgba(254, 249, 245, 0.06);
+  border: 1px solid rgba(254, 249, 245, 0.14);
+  color: #FEF9F5;
+  backdrop-filter: blur(12px);
 }
 
 .btn-secondary:hover {
-  background: #F8FAFC;
-  border-color: #94A3B8;
-  color: #0F172A;
+  background: rgba(254, 249, 245, 0.12);
+  border-color: #B8FD02;
+  color: #B8FD02;
   transform: translateY(-1px);
 }
 
-/* === INPUT SYSTEM (light) === */
+/* === INPUT SYSTEM === */
 .input-field {
   @apply w-full rounded-xl px-4 py-3 text-sm transition-all duration-200 outline-none;
-  background: #ffffff;
-  border: 1px solid #CBD5E1;
-  color: #0F172A;
+  background: #111317;
+  border: 1px solid rgba(254, 249, 245, 0.1);
+  color: #FEF9F5;
 }
 
 .input-field::placeholder {
-  color: #94A3B8;
+  color: #6A7280;
 }
 
 .input-field:focus {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #B8FD02;
+  box-shadow: 0 0 0 3px rgba(184, 253, 2, 0.2);
+  background: #16181C;
 }
 
-/* === SKELETON LOADER (flat pulse, no shimmer gradient) === */
-.skeleton {
-  @apply rounded-xl bg-slate-200 animate-pulse;
-}
-
-/* === SCROLLBAR (light) === */
+/* === SCROLLBAR === */
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #EDF1F7;
+  background: #0B0C0E;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C7D2E0;
+  background: #242830;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #A9BBCF;
+  background: #B8FD02;
 }
 
-/* === STREAK FIRE ANIMATION === */
-@keyframes fire-pulse {
-  0%, 100% { transform: scale(1) rotate(-3deg); }
-  50% { transform: scale(1.15) rotate(3deg); }
-}
-
-.fire-animate {
-  animation: fire-pulse 1.2s ease-in-out infinite;
-  display: inline-block;
-}
-
-/* === MOBILE RESPONSIVE UTILITIES === */
-@media (max-width: 768px) {
-  .mobile-hidden {
-    display: none !important;
-  }
-  .mobile-full {
-    width: 100% !important;
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* === PROGRESS BAR ANIMATION === */
-.progress-bar {
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* === CARD HOVER (soft lift on light) === */
+/* === CARD HOVER === */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .card-hover:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.8);
+  border-color: rgba(184, 253, 2, 0.4);
 }
 
-/* === PASTEL FLAT BADGES (no gradients / glow) === */
-.badge-emerald {
-  @apply px-3 py-1 rounded-full text-xs font-bold;
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
-  color: #047857;
+/* === BADGE SYSTEM === */
+.badge-emerald, .badge-fitgreen {
+  @apply px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5 uppercase tracking-wider;
+  background: rgba(184, 253, 2, 0.14);
+  border: 1px solid rgba(184, 253, 2, 0.4);
+  color: #B8FD02;
 }
 
 .badge-cyan {
-  @apply px-3 py-1 rounded-full text-xs font-bold;
-  background: #ECFEFF;
-  border: 1px solid #A5F3FC;
-  color: #0E7490;
+  @apply px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5;
+  background: rgba(254, 249, 245, 0.1);
+  border: 1px solid rgba(254, 249, 245, 0.2);
+  color: #FEF9F5;
 }
 
 .badge-purple {
-  @apply px-3 py-1 rounded-full text-xs font-bold;
-  background: #F5F3FF;
-  border: 1px solid #DDD6FE;
-  color: #6D28D9;
+  @apply px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5;
+  background: rgba(184, 253, 2, 0.08);
+  border: 1px solid rgba(184, 253, 2, 0.25);
+  color: #CCFF00;
 }
 
 .badge-amber {
-  @apply px-3 py-1 rounded-full text-xs font-bold;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  color: #B45309;
+  @apply px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #FBBF24;
 }
 
-.badge-rose {
-  @apply px-3 py-1 rounded-full text-xs font-bold;
-  background: #FFF1F2;
-  border: 1px solid #FECDD3;
-  color: #BE123C;
+/* === ATHLETIC TEXT GRADIENT === */
+.gradient-text {
+  background: linear-gradient(135deg, #FEF9F5 20%, #B8FD02 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.badge-blue {
-  @apply px-3 py-1 rounded-full text-xs font-bold;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  color: #1D4ED8;
+.text-fitgreen {
+  color: #B8FD02;
 }
 
+.bg-fitgreen {
+  background-color: #B8FD02;
+}
+
+.border-fitgreen {
+  border-color: #B8FD02;
+}
+
+}
+
+/* ==========================================================================
+   === LIGHT MODE COMPONENT & UTILITY OVERRIDES (HIGH CONTRAST ATHLETIC) ===
+   ========================================================================== */
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(11, 12, 14, 0.08);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.08);
+}
+
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(11, 12, 14, 0.08);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.06);
+}
+
+html.light .bg-\[\#0B0C0E\] {
+  background-color: #F4F6F9 !important;
+}
+
+html.light .bg-\[\#16181C\] {
+  background-color: #FFFFFF !important;
+}
+
+html.light .text-\[\#FEF9F5\] {
+  color: #0B0C0E !important;
+}
+
+html.light .border-slate-800 {
+  border-color: #E2E8F0 !important;
+}
+
+html.light .border-slate-700 {
+  border-color: #CBD5E1 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748B !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-200 {
+  color: #1E293B !important;
+}
+
+html.light .input-field {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0B0C0E !important;
+}
+
+html.light .input-field::placeholder {
+  color: #94A3B8 !important;
+}
+
+html.light .btn-secondary {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0B0C0E !important;
+}
+
+html.light .btn-secondary:hover {
+  background: #F1F5F9 !important;
+  border-color: #0B0C0E !important;
+  color: #0B0C0E !important;
+}
+
+html.light nav {
+  background-color: rgba(254, 249, 245, 0.94) !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.light .badge-fitgreen, html.light .badge-emerald {
+  background: rgba(184, 253, 2, 0.25) !important;
+  border-color: rgba(101, 163, 13, 0.5) !important;
+  color: #4D7C0F !important;
+}
+
+html.light .gradient-text {
+  background: linear-gradient(135deg, #0B0C0E 30%, #4D7C0F 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #FEF9F5;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }

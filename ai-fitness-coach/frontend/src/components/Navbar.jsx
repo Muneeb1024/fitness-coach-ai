@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Dumbbell, LogOut, Sparkles, LayoutDashboard, TrendingUp, CreditCard, Menu, X, Crown } from 'lucide-react';
+import { Dumbbell, LogOut, Sparkles, LayoutDashboard, TrendingUp, Gift, User as UserIcon, Menu, X } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
@@ -19,28 +20,35 @@ export default function Navbar() {
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/plans', label: 'My Plans', icon: Sparkles },
     { to: '/progress', label: 'Progress', icon: TrendingUp },
-    { to: '/pricing', label: 'Membership', icon: CreditCard },
+    { to: '/profile', label: 'Profile', icon: UserIcon },
+    { to: '/pricing', label: 'Beta Access', icon: Gift },
   ];
 
   const getInitials = (name) =>
     name?.split(' ').map((n) => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-slate-200">
+    <nav className="sticky top-0 z-50 bg-[#0B0C0E]/90 backdrop-blur-xl border-b border-[#1E2229] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link to={user ? (isAdmin ? '/admin' : '/dashboard') : '/'} className="flex items-center gap-2.5 group">
+        {/* Brand Logo */}
+        <Link to={user ? (isAdmin ? '/admin' : '/dashboard') : '/'} className="flex items-center gap-3 group">
           <motion.div
-            whileHover={{ scale: 1.08, rotate: -5 }}
+            whileHover={{ scale: 1.08, rotate: -4 }}
             whileTap={{ scale: 0.95 }}
-            className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-md"
+            className="w-9 h-9 rounded-xl bg-[#B8FD02] flex items-center justify-center shadow-lg shadow-[#B8FD02]/25 border border-[#B8FD02]"
           >
-            <Dumbbell className="w-5 h-5 text-white font-bold" />
+            <Dumbbell className="w-5 h-5 text-[#0B0C0E] font-black" />
           </motion.div>
-          <span className="text-lg font-extrabold tracking-tight text-slate-900 hidden sm:block">
-            Fit<span className="text-blue-600">Vision</span> <span className="text-slate-400 font-medium text-sm">AI</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-black tracking-tight text-[#FEF9F5]">
+              FIT<span className="text-[#B8FD02]">VISION</span>
+            </span>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-extrabold text-slate-300 bg-[#16181C] border border-slate-800 px-2.5 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#B8FD02] animate-pulse" />
+              by SoftnoveX
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Nav Links */}
@@ -51,10 +59,10 @@ export default function Navbar() {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${
+                  `flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all duration-200 border ${
                     isActive
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-transparent'
+                      ? 'bg-[#B8FD02]/15 text-[#B8FD02] border-[#B8FD02]/40 shadow-sm'
+                      : 'text-slate-400 hover:text-[#FEF9F5] hover:bg-[#16181C] border-transparent'
                   }`
                 }
               >
@@ -65,51 +73,54 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Right Side */}
-        <div className="flex items-center gap-3">
+        {/* Right Side Controls */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Theme Toggle Button */}
+          <ThemeToggle />
+
           {user ? (
             <>
               {!isAdmin && user.streakCount > 0 && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30"
                 >
-                  <span className="fire-animate text-base">🔥</span>
-                  <span className="text-orange-600 text-xs font-extrabold">{user.streakCount}</span>
+                  <span className="fire-animate text-sm">🔥</span>
+                  <span className="text-orange-400 text-xs font-black">{user.streakCount}</span>
                 </motion.div>
               )}
 
-              <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-                <div className="hidden sm:flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-extrabold text-sm">
-                    {getInitials(user.name)}
+              <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
+                <Link
+                  to={isAdmin ? '/admin' : '/profile'}
+                  className="hidden sm:flex items-center gap-2.5 group p-1 -m-1 rounded-xl hover:bg-[#16181C] transition-colors"
+                  title="View Complete Health Profile & Settings"
+                >
+                  <div className="w-9 h-9 rounded-full bg-[#B8FD02]/20 border border-[#B8FD02]/40 group-hover:border-[#B8FD02] flex items-center justify-center text-[#B8FD02] font-black text-sm transition-colors overflow-hidden">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      getInitials(user.name)
+                    )}
                   </div>
                   <div className="text-left">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-semibold text-slate-900 leading-tight">{user.name?.split(' ')[0]}</p>
-                      {user.subscription?.tier && (
-                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border uppercase ${
-                          user.subscription.tier === 'elite'
-                            ? 'bg-amber-400/15 border-amber-400/30 text-amber-600'
-                            : user.subscription.tier === 'pro'
-                            ? 'bg-purple-500/15 border-purple-500/30 text-purple-600'
-                            : 'bg-slate-100 border-slate-200 text-slate-500'
-                        }`}>
-                          {user.subscription.tier}
-                        </span>
-                      )}
+                      <p className="text-xs font-bold text-[#FEF9F5] group-hover:text-[#B8FD02] leading-tight transition-colors">{user.name?.split(' ')[0]}</p>
+                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full border uppercase bg-[#B8FD02]/15 border-[#B8FD02]/40 text-[#B8FD02]">
+                        {isAdmin ? 'ADMIN' : 'PRO BETA'}
+                      </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 capitalize">{user.role}</p>
+                    <p className="text-[10px] text-slate-400 capitalize font-medium">{user.role === 'admin' ? 'System Admin' : 'Founder Profile'}</p>
                   </div>
-                </div>
+                </Link>
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLogout}
                   title="Log out"
-                  className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20"
                 >
                   <LogOut className="w-4 h-4" />
                 </motion.button>
@@ -119,22 +130,20 @@ export default function Navbar() {
               {!isAdmin && (
                 <button
                   onClick={() => setMobileOpen(!mobileOpen)}
-                  className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                  className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60"
                 >
                   {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               )}
             </>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/login" className="btn-secondary text-sm hidden sm:block">
+            <div className="flex items-center gap-2.5">
+              <Link to="/login" className="btn-secondary text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5">
                 Sign In
               </Link>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                <Link to="/signup" className="btn-primary text-sm">
-                  Get Started
-                </Link>
-              </motion.div>
+              <Link to="/signup" className="btn-primary text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5">
+                Get Started
+              </Link>
             </div>
           )}
         </div>
@@ -146,7 +155,7 @@ export default function Navbar() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden border-t border-slate-200 px-4 py-3 space-y-1"
+          className="md:hidden border-t border-slate-800 px-4 py-3 space-y-1 bg-[#16181C]"
         >
           {navLinks.map((link) => (
             <NavLink
@@ -154,14 +163,14 @@ export default function Navbar() {
               to={link.to}
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
+                    ? 'bg-[#B8FD02]/20 text-[#B8FD02] border border-[#B8FD02]/40'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
                 }`
               }
             >
-              <link.icon className="w-4 h-4 text-blue-600" />
+              <link.icon className="w-4 h-4 text-[#B8FD02]" />
               {link.label}
             </NavLink>
           ))}

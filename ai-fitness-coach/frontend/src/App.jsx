@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
+import AppLayout from './components/AppLayout';
 import ChatWidget from './components/ChatWidget';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -11,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import Plans from './pages/Plans';
 import Progress from './pages/Progress';
 import Subscription from './pages/Subscription';
+import Profile from './pages/Profile';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
@@ -38,8 +40,8 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center gap-3 text-emerald-400 font-semibold">
-        <span className="w-5 h-5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
+      <div className="min-h-[70vh] flex items-center justify-center gap-3 text-[#B8FD02] font-semibold">
+        <span className="w-5 h-5 rounded-full border-2 border-[#B8FD02] border-t-transparent animate-spin" />
         Verifying Session...
       </div>
     );
@@ -58,32 +60,49 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
 export default function App() {
   const location = useLocation();
+  const { user } = useAuth();
+
+  const isPublicRoute = ['/', '/login', '/signup', '/admin/login'].includes(location.pathname) || (location.pathname === '/pricing' && !user);
 
   return (
-    <div className="min-h-screen bg-[#F3F6FB] text-slate-900 flex flex-col">
-      <Navbar />
+    <div className="min-h-screen bg-[#0B0C0E] text-[#FEF9F5] flex flex-col transition-colors duration-200">
+      {/* Top Navbar for Public Marketing Routes */}
+      {isPublicRoute && <Navbar />}
+
       <div className="flex-1">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
+            {/* Public Marketing Routes */}
             <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
             <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
             <Route path="/signup" element={<PageWrapper><Signup /></PageWrapper>} />
             <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
 
+            {/* Authenticated User App Routes (With Modern Left Sidebar Layout) */}
             <Route path="/onboarding" element={
-              <ProtectedRoute><PageWrapper><Onboarding /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute><AppLayout><PageWrapper><Onboarding /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/dashboard" element={
-              <ProtectedRoute><PageWrapper><Dashboard /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute><AppLayout><PageWrapper><Dashboard /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/plans" element={
-              <ProtectedRoute><PageWrapper><Plans /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute><AppLayout><PageWrapper><Plans /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/progress" element={
-              <ProtectedRoute><PageWrapper><Progress /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute><AppLayout><PageWrapper><Progress /></PageWrapper></AppLayout></ProtectedRoute>
             } />
-            <Route path="/pricing" element={<PageWrapper><Subscription /></PageWrapper>} />
+            <Route path="/pricing" element={
+              user ? (
+                <ProtectedRoute><AppLayout><PageWrapper><Subscription /></PageWrapper></AppLayout></ProtectedRoute>
+              ) : (
+                <PageWrapper><Subscription /></PageWrapper>
+              )
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute><AppLayout><PageWrapper><Profile /></PageWrapper></AppLayout></ProtectedRoute>
+            } />
 
+            {/* Admin Portal Routes */}
             <Route path="/admin" element={
               <ProtectedRoute adminOnly><PageWrapper><AdminDashboard /></PageWrapper></ProtectedRoute>
             } />
@@ -104,7 +123,9 @@ export default function App() {
           </Routes>
         </AnimatePresence>
       </div>
-      <ChatWidget />
+
+      {/* Floating Chat Widget on Public Routes */}
+      {isPublicRoute && <ChatWidget />}
     </div>
   );
 }

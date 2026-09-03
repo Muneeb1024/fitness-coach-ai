@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import { Progress } from '../models/Progress.js';
 import { User } from '../models/User.js';
+import { Plan } from '../models/Plan.js';
 import { memoryStore } from '../services/store.js';
+import { checkAndAwardBadges } from '../utils/badgeEngine.js';
 
 export const getDailyProgress = async (req, res) => {
   try {
@@ -12,15 +14,26 @@ export const getDailyProgress = async (req, res) => {
     if (isDbConnected) {
       let progress = await Progress.findOne({ userId: req.user._id, date: targetDate });
       if (!progress) {
+        let initialMeals = [
+          { mealName: 'Breakfast', consumed: false, calories: 500 },
+          { mealName: 'Lunch', consumed: false, calories: 650 },
+          { mealName: 'Snack', consumed: false, calories: 300 },
+          { mealName: 'Dinner', consumed: false, calories: 650 }
+        ];
+
+        const userPlan = await Plan.findOne({ userId: req.user._id }).sort({ createdAt: -1 });
+        if (userPlan?.dietPlan?.meals?.length) {
+          initialMeals = userPlan.dietPlan.meals.map((m) => ({
+            mealName: `${m.name || 'Meal'}: ${m.description ? m.description.slice(0, 30) : ''}`,
+            consumed: false,
+            calories: m.calories || 500
+          }));
+        }
+
         progress = await Progress.create({
           userId: req.user._id,
           date: targetDate,
-          mealsLogged: [
-            { mealName: 'Breakfast', consumed: false, calories: 500 },
-            { mealName: 'Lunch', consumed: false, calories: 650 },
-            { mealName: 'Snack', consumed: false, calories: 300 },
-            { mealName: 'Dinner', consumed: false, calories: 650 }
-          ],
+          mealsLogged: initialMeals,
           waterMl: 0,
           sleepHours: 7,
           workoutCompleted: false
@@ -31,16 +44,27 @@ export const getDailyProgress = async (req, res) => {
 
     let progress = memoryStore.progressLogs.find((p) => String(p.userId) === String(req.user._id) && p.date === targetDate);
     if (!progress) {
+      let initialMeals = [
+        { mealName: 'Breakfast', consumed: false, calories: 500 },
+        { mealName: 'Lunch', consumed: false, calories: 650 },
+        { mealName: 'Snack', consumed: false, calories: 300 },
+        { mealName: 'Dinner', consumed: false, calories: 650 }
+      ];
+
+      const userPlan = (memoryStore.plans || []).find((p) => String(p.userId) === String(req.user._id));
+      if (userPlan?.dietPlan?.meals?.length) {
+        initialMeals = userPlan.dietPlan.meals.map((m) => ({
+          mealName: `${m.name || 'Meal'}: ${m.description ? m.description.slice(0, 30) : ''}`,
+          consumed: false,
+          calories: m.calories || 500
+        }));
+      }
+
       progress = {
         _id: `prog_${Date.now()}`,
         userId: req.user._id,
         date: targetDate,
-        mealsLogged: [
-          { mealName: 'Breakfast', consumed: false, calories: 500 },
-          { mealName: 'Lunch', consumed: false, calories: 650 },
-          { mealName: 'Snack', consumed: false, calories: 300 },
-          { mealName: 'Dinner', consumed: false, calories: 650 }
-        ],
+        mealsLogged: initialMeals,
         waterMl: 0,
         sleepHours: 7,
         workoutCompleted: false
@@ -78,9 +102,15 @@ export const updateDailyProgress = async (req, res) => {
         user.streakCount += 1;
         user.lastStreakDate = todayStr;
         user.fitnessScore = Math.min(100, user.fitnessScore + 1);
-        await user.save();
       }
-      return res.json({ message: 'Progress updated', progress, streakCount: user.streakCount });
+
+      // Badge check: fetch last 7 days + plan for context
+      const last7 = await Progress.find({ userId: req.user._id }).sort({ date: -1 }).limit(7);
+      const plan = await Plan.findOne({ userId: req.user._id }).sort({ createdAt: -1 });
+      const newBadges = await checkAndAwardBadges(user, progress, last7, plan);
+
+      await user.save();
+      return res.json({ message: 'Progress updated', progress, streakCount: user.streakCount, newBadges });
     }
 
     let progress = memoryStore.progressLogs.find((p) => String(p.userId) === String(req.user._id) && p.date === targetDate);
