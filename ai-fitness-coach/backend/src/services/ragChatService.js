@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Plan } from '../models/Plan.js';
 import { Progress } from '../models/Progress.js';
 import { memoryStore } from './store.js';
@@ -101,20 +100,10 @@ export const answerUserChatQuery = async ({ user, query }) => {
     }))
   };
 
-  const editableSystemPrompt = await getSystemPrompt();
-
   const apiKey = process.env.GEMINI_API_KEY;
-  let useGemini = false;
-  let genAI = null;
+  let useGemini = apiKey && apiKey.length > 10;
 
-  if (apiKey && (apiKey.startsWith('AIza') || apiKey.length > 20)) {
-    try {
-      genAI = new GoogleGenerativeAI(apiKey);
-      useGemini = true;
-    } catch (err) {
-      console.warn('[Gemini Init Warning]', err.message);
-    }
-  }
+  const editableSystemPrompt = await getSystemPrompt();
 
   const mealSummary = contextData.meals.length
     ? contextData.meals.map((m) => `${m.name} (${m.time}) — ${m.description}`).join('; ')
@@ -169,20 +158,23 @@ Response:`;
 
   let responseText = '';
 
-  if (useGemini && genAI) {
-    const candidateModels = ['gemini-3.6-flash', 'gemini-3.6-flash', 'gemini-3.6-flash'];
-    for (const modelName of candidateModels) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(ragPrompt);
-        responseText = result.response.text();
-        if (responseText) break;
-      } catch (err) {
-        console.warn(`[Gemini Chat RAG Error with ${modelName}]:`, err.message);
+  if (useGemini) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: ragPrompt }] }] }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        responseText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
       }
+    } catch (err) {
+      console.warn('[Gemini Chat RAG Error]:', err.message);
     }
     if (!responseText) {
-      console.error('[Gemini Chat RAG] Gemini API call failed (Quota Exceeded or Invalid Key). Using local RAG fallback response.');
+      console.error('[Gemini Chat RAG] Model call failed. Using local RAG fallback.');
     }
   }
 

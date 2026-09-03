@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// Plan Generator Service — no SDK needed, calculations only
 
 /**
  * Dynamic Fitness & Nutrition Calculation Engine

@@ -74,11 +74,17 @@ export default function ChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-full bg-[#B8FD02] text-[#0B0C0E] font-black shadow-xl shadow-[#B8FD02]/25 hover:scale-105 hover:shadow-2xl transition-all border border-[#B8FD02] uppercase tracking-wider text-xs"
+          className="group relative
+            /* Mobile: small circle icon-only */
+            w-12 h-12 sm:w-auto sm:h-auto
+            flex items-center justify-center
+            sm:gap-3 sm:px-5 sm:py-3.5
+            rounded-full bg-[#B8FD02] text-[#0B0C0E] font-black
+            shadow-xl shadow-[#B8FD02]/25 hover:scale-105 hover:shadow-2xl
+            transition-all border border-[#B8FD02] uppercase tracking-wider text-xs"
         >
           <Bot className="w-5 h-5 text-[#0B0C0E] shrink-0" />
           <span className="hidden sm:inline">Ask AI Coach</span>
-          <span className="sm:hidden">AI Coach</span>
           <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#CCFF00] animate-ping" />
         </button>
       )}

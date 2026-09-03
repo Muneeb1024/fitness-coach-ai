@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Progress } from '../models/Progress.js';
 import { Plan } from '../models/Plan.js';
 import { User } from '../models/User.js';
@@ -71,13 +70,19 @@ Insight:`;
 
     let insight = '';
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey && (apiKey.startsWith('AIza') || apiKey.length > 20)) {
+    const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    if (apiKey && apiKey.length > 10) {
       try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
-        const result = await model.generateContent(insightPrompt);
-        insight = result.response.text()?.trim();
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: insightPrompt }] }] }),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          insight = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        }
       } catch (err) {
         console.warn('[Daily Insight Gemini Error]', err.message);
       }

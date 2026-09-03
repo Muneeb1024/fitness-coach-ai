@@ -1,12 +1,50 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import mongoose from 'mongoose';
 import { memoryStore } from '../services/store.js';
 
 // In-memory food log store (per user, per day)
-// Structure: { [userId_date]: [{ ...entry }] }
 const foodLogCache = {};
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Read key lazily at call time (not at module init) — ESM imports run before dotenv.config()
+const getApiKey = () => (process.env.GEMINI_API_KEY || '').trim();
+
+const PRIMARY_MODEL = 'gemini-3.6-flash';
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+// ── Call gemini-3.6-flash directly ──────────────────────────────────────────
+async function generateFoodAnalysis(imageBase64, mimeType, prompt) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('GEMINI_API_KEY not set in .env');
+
+  console.log(`[Food AI] 🚀 Requesting analysis from ${PRIMARY_MODEL}...`);
+  const url = `${GEMINI_BASE}/${PRIMARY_MODEL}:generateContent?key=${apiKey}`;
+  
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mimeType, data: imageBase64 } },
+          { text: prompt },
+        ],
+      }],
+    }),
+  });
+
+  if (!resp.ok) {
+    const errBody = await resp.text();
+    const err = new Error(`[${resp.status}] ${PRIMARY_MODEL}: ${errBody.substring(0, 150)}`);
+    err.status = resp.status;
+    throw err;
+  }
+
+  const data = await resp.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+  if (!text) throw new Error(`${PRIMARY_MODEL}: received empty response`);
+  console.log(`[Food AI] ✅ Success with ${PRIMARY_MODEL}`);
+  return text;
+}
+
 
 // ─── Analyze food image with Gemini Vision ─────────────────────────────────────
 export const analyzeFood = async (req, res) => {
@@ -16,8 +54,6 @@ export const analyzeFood = async (req, res) => {
     if (!imageBase64) {
       return res.status(400).json({ message: 'Image data is required' });
     }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
     const prompt = `You are an expert nutritionist AI for FitVision fitness app.
 
@@ -53,17 +89,7 @@ Return this exact JSON structure:
   "mealType": "breakfast|lunch|dinner|snack"
 }`;
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType,
-          data: imageBase64,
-        },
-      },
-      prompt,
-    ]);
-
-    const rawText = result.response.text()?.trim();
+    const rawText = await generateFoodAnalysis(imageBase64, mimeType, prompt);
 
     // Extract JSON from response (handle markdown code blocks)
     const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || rawText.match(/(\{[\s\S]*\})/);
@@ -79,7 +105,20 @@ Return this exact JSON structure:
     res.json({ success: true, nutrition: nutritionData });
   } catch (error) {
     console.error('[Food Analyze Error]', error.message);
-    res.status(500).json({ message: 'AI analysis failed: ' + error.message });
+    const is503 = error.message?.includes('503') || error.message?.includes('overloaded') || error.message?.includes('high demand');
+    const is404 = error.message?.includes('404') || error.message?.includes('no longer available');
+    
+    if (is503) {
+      return res.status(503).json({ 
+        message: '🔄 Google AI is temporarily busy due to high demand. Please wait 10–15 seconds and try again.' 
+      });
+    }
+    if (is404) {
+      return res.status(503).json({ 
+        message: '⚠️ AI model update in progress. Please try again in a moment.' 
+      });
+    }
+    res.status(500).json({ message: 'AI analysis failed. Please try again.' });
   }
 };
 
@@ -167,3 +206,4 @@ export const deleteFoodEntry = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+

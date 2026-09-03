@@ -1,9 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config(); // MUST be first — loads .env before any other module initializes
+
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 
 import authRoutes from './routes/authRoutes.js';
@@ -15,8 +17,6 @@ import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
-
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
