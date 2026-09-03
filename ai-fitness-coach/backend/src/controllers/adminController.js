@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { Plan } from '../models/Plan.js';
 import { ChatLog } from '../models/ChatLog.js';
@@ -174,6 +175,145 @@ export const moderateChatLog = async (req, res) => {
     if (!chatLog) return res.status(404).json({ message: 'Chat log not found' });
     chatLog.flagged = false;
     res.json({ message: 'Chat log flag resolved by admin', chatLog });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Admin User CRUD ──────────────────────────────────────────────────────────
+
+export const createUser = async (req, res) => {
+  try {
+    const { name, email, password, role = 'user' } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ message: 'name, email and password are required' });
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      const exists = await User.findOne({ email: email.trim().toLowerCase() });
+      if (exists) return res.status(400).json({ message: 'A user with this email already exists' });
+      const newUser = await User.create({ name, email: email.trim().toLowerCase(), password, role });
+      await AdminLog.create({ adminId: req.user._id, action: 'CREATE_USER', targetUserId: newUser._id, details: `Admin created user ${newUser.email} with role ${role}` });
+      const { password: _, ...safe } = newUser.toObject();
+      return res.status(201).json({ message: 'User created successfully', user: safe });
+    }
+
+    const exists = memoryStore.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+    if (exists) return res.status(400).json({ message: 'A user with this email already exists' });
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    const newUser = { _id: `user_${Date.now()}`, name, email: email.trim().toLowerCase(), passwordHash: hash, role, status: 'active', createdAt: new Date() };
+    memoryStore.users.push(newUser);
+    const { passwordHash: __, ...safe } = newUser;
+    res.status(201).json({ message: 'User created successfully', user: safe });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, role, status } = req.body;
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      if (name) user.name = name;
+      if (email) user.email = email.trim().toLowerCase();
+      if (role) user.role = role;
+      if (status) user.status = status;
+      await user.save();
+      await AdminLog.create({ adminId: req.user._id, action: 'UPDATE_USER', targetUserId: user._id, details: `Admin updated user ${user.email}` });
+      const { password: _, ...safe } = user.toObject();
+      return res.json({ message: 'User updated successfully', user: safe });
+    }
+
+    const user = memoryStore.users.find((u) => String(u._id) === String(userId));
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (name) user.name = name;
+    if (email) user.email = email.trim().toLowerCase();
+    if (role) user.role = role;
+    if (status) user.status = status;
+    const { passwordHash: _, ...safe } = user;
+    res.json({ message: 'User updated successfully', user: safe });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      if (user.role === 'admin') return res.status(403).json({ message: 'Cannot delete an admin account' });
+      await User.findByIdAndDelete(userId);
+      await AdminLog.create({ adminId: req.user._id, action: 'DELETE_USER', targetUserId: userId, details: `Admin deleted user ${user.email}` });
+      return res.json({ message: 'User deleted successfully' });
+    }
+
+    const idx = memoryStore.users.findIndex((u) => String(u._id) === String(userId));
+    if (idx === -1) return res.status(404).json({ message: 'User not found' });
+    if (memoryStore.users[idx].role === 'admin') return res.status(403).json({ message: 'Cannot delete an admin account' });
+    memoryStore.users.splice(idx, 1);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      user.password = newPassword; // pre-save hook will hash it
+      await user.save();
+      await AdminLog.create({ adminId: req.user._id, action: 'RESET_PASSWORD', targetUserId: user._id, details: `Admin reset password for ${user.email}` });
+      return res.json({ message: 'Password reset successfully' });
+    }
+
+    const user = memoryStore.users.find((u) => String(u._id) === String(userId));
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Forgot Password (user self-service) ─────────────────────────────────────
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) return res.status(400).json({ message: 'Email and new password are required' });
+    if (newPassword.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      const user = await User.findOne({ email: email.trim().toLowerCase() });
+      if (!user) return res.status(404).json({ message: 'No account found with this email' });
+      user.password = newPassword;
+      await user.save();
+      return res.json({ message: 'Password updated successfully. You can now sign in.' });
+    }
+
+    const user = memoryStore.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+    if (!user) return res.status(404).json({ message: 'No account found with this email' });
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    res.json({ message: 'Password updated successfully. You can now sign in.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -59,23 +59,6 @@ export default function Login() {
           <p className="text-slate-400 text-xs sm:text-sm mt-1">Access your AI fitness intelligence dashboard</p>
         </div>
 
-        {/* Evaluation Demo Fill Shortcut */}
-        <div className="p-3.5 rounded-2xl bg-[#0B0C0E] border border-slate-800 flex items-center justify-between">
-          <div className="text-xs">
-            <p className="font-extrabold text-[#FEF9F5] flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#B8FD02]" />
-              Demo Tester Account
-            </p>
-            <p className="text-slate-400 text-[11px]">user@fitvision.ai</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleQuickFill}
-            className="py-1.5 px-3 rounded-xl bg-[#B8FD02]/15 border border-[#B8FD02]/40 text-[#B8FD02] hover:bg-[#B8FD02]/25 text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95"
-          >
-            Auto Fill
-          </button>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -107,6 +90,13 @@ export default function Login() {
                 {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+          </div>
+
+          {/* Forgot Password Link */}
+          <div className="flex justify-end -mt-1">
+            <Link to="/forgot-password" className="text-xs text-slate-400 hover:text-[#B8FD02] transition-colors font-medium">
+              Forgot your password?
+            </Link>
           </div>
 
           <motion.button

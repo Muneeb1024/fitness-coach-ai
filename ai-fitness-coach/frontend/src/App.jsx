@@ -7,6 +7,7 @@ import ChatWidget from './components/ChatWidget';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Plans from './pages/Plans';
@@ -62,7 +63,7 @@ export default function App() {
   const location = useLocation();
   const { user } = useAuth();
 
-  const isPublicRoute = ['/', '/login', '/signup', '/admin/login'].includes(location.pathname) || (location.pathname === '/pricing' && !user);
+  const isPublicRoute = ['/', '/login', '/signup', '/admin/login', '/forgot-password'].includes(location.pathname) || (location.pathname === '/pricing' && !user);
 
   return (
     <div className="min-h-screen bg-[#0B0C0E] text-[#FEF9F5] flex flex-col transition-colors duration-200">
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/" element={<PageWrapper><Landing /></PageWrapper>} />
             <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
             <Route path="/signup" element={<PageWrapper><Signup /></PageWrapper>} />
+            <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
             <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
 
             {/* Authenticated User App Routes (With Modern Left Sidebar Layout) */}
@@ -102,21 +104,21 @@ export default function App() {
               <ProtectedRoute><AppLayout><PageWrapper><Profile /></PageWrapper></AppLayout></ProtectedRoute>
             } />
 
-            {/* Admin Portal Routes */}
+            {/* Admin Portal Routes — shared AppLayout keeps Sidebar persistent */}
             <Route path="/admin" element={
-              <ProtectedRoute adminOnly><PageWrapper><AdminDashboard /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute adminOnly><AppLayout><PageWrapper><AdminDashboard /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/admin/users" element={
-              <ProtectedRoute adminOnly><PageWrapper><UserManagement /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute adminOnly><AppLayout><PageWrapper><UserManagement /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/admin/ai-monitor" element={
-              <ProtectedRoute adminOnly><PageWrapper><AIMonitor /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute adminOnly><AppLayout><PageWrapper><AIMonitor /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/admin/plan-override" element={
-              <ProtectedRoute adminOnly><PageWrapper><PlanOverride /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute adminOnly><AppLayout><PageWrapper><PlanOverride /></PageWrapper></AppLayout></ProtectedRoute>
             } />
             <Route path="/admin/moderation" element={
-              <ProtectedRoute adminOnly><PageWrapper><Moderation /></PageWrapper></ProtectedRoute>
+              <ProtectedRoute adminOnly><AppLayout><PageWrapper><Moderation /></PageWrapper></AppLayout></ProtectedRoute>
             } />
 
             <Route path="*" element={<Navigate to="/" replace />} />

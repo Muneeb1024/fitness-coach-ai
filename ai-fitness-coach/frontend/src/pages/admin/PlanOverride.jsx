@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import API from '../../services/api';
-import Sidebar from '../../components/Sidebar';
-import { Sliders, User, Utensils, Dumbbell, Save } from 'lucide-react';
+import { Sliders, User, Utensils, Dumbbell, Save, Sparkles, AlertCircle } from 'lucide-react';
 
 export default function PlanOverride() {
   const location = useLocation();
@@ -94,53 +94,65 @@ export default function PlanOverride() {
   const selectedUserObj = users.find((u) => String(u._id) === String(selectedUserId));
 
   return (
-    <div className="flex min-h-[calc(100vh-73px)] bg-[#F3F6FB] text-slate-900">
-      <Sidebar />
+    <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-7xl mx-auto overflow-x-hidden min-w-0 text-[#FEF9F5]">
 
-      <main className="flex-1 p-6 sm:p-8 space-y-6 max-w-7xl mx-auto overflow-x-hidden">
         {/* Header */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel p-6 sm:p-8 rounded-3xl bg-[#16181C] border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
           <div>
-            <span className="badge-purple inline-flex items-center gap-1.5 mb-2">
-              <Sliders className="w-3.5 h-3.5" /> Plan Override Studio
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Custom Plan Override Studio</h1>
-            <p className="text-slate-500 text-sm mt-0.5">Manually edit routines, calories, macros & assign custom overrides directly to users</p>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-3 py-1 rounded-full bg-[#B8FD02]/15 border border-[#B8FD02]/40 text-[#B8FD02] text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <Sliders className="w-3.5 h-3.5" /> Plan Override Studio
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#FEF9F5] tracking-tight uppercase">
+              Custom Plan Override Studio
+            </h1>
+            <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+              Manually edit workout splits, caloric targets & macros to assign personalized overrides
+            </p>
           </div>
 
           <button
             onClick={handleSaveOverride}
             disabled={saving || !selectedUserId}
-            className="btn-primary text-xs flex items-center gap-2 disabled:opacity-50"
+            className="btn-primary text-xs px-5 py-2.5 uppercase tracking-wider flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-[#B8FD02]/20"
           >
             <Save className="w-4 h-4" />
-            {saving ? 'Saving Override...' : 'Publish Plan Override'}
+            {saving ? 'Publishing Override...' : 'Publish Plan Override'}
           </button>
-        </div>
+        </motion.div>
 
         {/* User Picker */}
-        <div className="glass-card p-6 rounded-3xl border border-slate-200 space-y-3">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-            <User className="w-4 h-4 text-violet-600" /> Select Target User
+        <div className="glass-card p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-3">
+          <label className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <User className="w-4 h-4 text-[#B8FD02]" /> Select Target Athlete Account
           </label>
 
           <select
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            className="w-full bg-white border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+            className="input-field bg-[#0B0C0E] text-xs"
           >
             <option value="">-- Choose User Account --</option>
             {users.map((u) => (
               <option key={u._id} value={u._id}>
-                {u.name} ({u.email}) - Goal: {u.goals?.primaryGoal || 'Maintenance'}
+                {u.name} ({u.email}) — Goal: {u.goals?.primaryGoal || 'Maintenance'}
               </option>
             ))}
           </select>
 
           {selectedUserObj && (
-            <p className="text-xs text-slate-500 mt-2">
-              Selected: <span className="text-slate-900 font-bold">{selectedUserObj.name}</span> • Goal: <span className="text-emerald-600 font-bold">{selectedUserObj.goals?.primaryGoal || 'Maintenance'}</span> • Current BMI: {selectedUserObj.bodyMetrics?.estimatedBmi || 22.8}
-            </p>
+            <div className="p-3 rounded-2xl bg-[#0B0C0E] border border-slate-800 flex flex-wrap items-center gap-3 text-xs">
+              <span className="text-slate-400 font-bold uppercase text-[10px]">Active Target:</span>
+              <strong className="text-[#FEF9F5]">{selectedUserObj.name}</strong>
+              <span className="text-[#B8FD02] font-black uppercase">• Goal: {selectedUserObj.goals?.primaryGoal || 'Maintenance'}</span>
+              <span className="text-cyan-400 font-bold">• BMI: {selectedUserObj.bodyMetrics?.estimatedBmi || 22.8}</span>
+              <span className="text-slate-400">• Weight: {selectedUserObj.bodyMetrics?.weightKg || 70}kg</span>
+            </div>
           )}
         </div>
 
@@ -148,74 +160,74 @@ export default function PlanOverride() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Diet Override */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <Utensils className="w-4 h-4 text-emerald-600" /> Custom Diet & Macro Override
+          <div className="glass-panel p-6 sm:p-8 rounded-3xl bg-[#16181C] border border-slate-800 space-y-4">
+            <h3 className="font-black text-[#FEF9F5] text-sm uppercase tracking-wider flex items-center gap-2">
+              <Utensils className="w-4 h-4 text-[#B8FD02]" /> Custom Diet & Macro Target Override
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Daily Calories (kcal)</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Daily Energy (kcal)</label>
                 <input
                   type="number"
                   value={dailyCalories}
                   onChange={(e) => setDailyCalories(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field mt-1 text-xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Protein (grams)</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Protein (g)</label>
                 <input
                   type="number"
                   value={proteinGrams}
                   onChange={(e) => setProteinGrams(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field mt-1 text-xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Carbohydrates (grams)</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Carbohydrates (g)</label>
                 <input
                   type="number"
                   value={carbsGrams}
                   onChange={(e) => setCarbsGrams(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field mt-1 text-xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Healthy Fats (grams)</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Healthy Fats (g)</label>
                 <input
                   type="number"
                   value={fatGrams}
                   onChange={(e) => setFatGrams(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field mt-1 text-xs"
                 />
               </div>
             </div>
           </div>
 
           {/* Workout Override */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <Dumbbell className="w-4 h-4 text-cyan-600" /> Custom Workout Split Override
+          <div className="glass-panel p-6 sm:p-8 rounded-3xl bg-[#16181C] border border-slate-800 space-y-4">
+            <h3 className="font-black text-[#FEF9F5] text-sm uppercase tracking-wider flex items-center gap-2">
+              <Dumbbell className="w-4 h-4 text-cyan-400" /> Custom Workout Split Override
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Routine Split Title</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Routine Split Title</label>
                 <input
                   type="text"
                   value={splitType}
                   onChange={(e) => setSplitType(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field mt-1 text-xs"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Frequency (Days / Week)</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Frequency (Days / Week)</label>
                 <select
                   value={frequencyDaysPerWeek}
                   onChange={(e) => setFrequencyDaysPerWeek(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field bg-[#0B0C0E] mt-1 text-xs"
                 >
                   <option value={3}>3 Days / Week</option>
                   <option value={4}>4 Days / Week</option>
@@ -225,19 +237,18 @@ export default function PlanOverride() {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Admin Notes for User</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Admin Coaching Notes for Athlete</label>
                 <input
                   type="text"
                   value={overrideNotes}
                   onChange={(e) => setOverrideNotes(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 mt-1 focus:outline-none focus:border-blue-500"
+                  className="input-field mt-1 text-xs"
                 />
               </div>
             </div>
           </div>
 
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

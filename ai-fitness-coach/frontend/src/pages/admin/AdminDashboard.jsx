@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import API from '../../services/api';
-import Sidebar from '../../components/Sidebar';
 import {
   Users, Activity, ShieldCheck, TrendingUp, Sparkles,
-  BarChart2, ShieldAlert, Clock, Filter, RefreshCw
+  BarChart2, ShieldAlert, Clock, Filter, RefreshCw, Zap
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -36,15 +35,14 @@ export default function AdminDashboard() {
 
   const analytics = data?.analytics || {};
 
-  // Mock Trend Chart Data
   const trendData = [
     { day: 'Mon', users: 12, plans: 18, chats: 45 },
     { day: 'Tue', users: 19, plans: 24, chats: 62 },
-    { day: 'Wed', users: 25, plans: 32, chats: 78 },
-    { day: 'Thu', users: 31, plans: 41, chats: 95 },
-    { day: 'Fri', users: 42, plans: 56, chats: 120 },
-    { day: 'Sat', users: 58, plans: 73, chats: 155 },
-    { day: 'Sun', users: 65, plans: 89, chats: 182 }
+    { day: 'Wed', users: 28, plans: 35, chats: 84 },
+    { day: 'Thu', users: 34, plans: 42, chats: 96 },
+    { day: 'Fri', users: 45, plans: 58, chats: 128 },
+    { day: 'Sat', users: 52, plans: 67, chats: 145 },
+    { day: 'Sun', users: 60, plans: 78, chats: 172 },
   ];
 
   const filteredLogs = (data?.recentAdminLogs || []).filter((log) => {
@@ -53,43 +51,44 @@ export default function AdminDashboard() {
   });
 
   const tooltipStyle = {
-    backgroundColor: '#ffffff',
-    border: '1px solid #E2E8F0',
-    borderRadius: '12px',
+    backgroundColor: '#16181C',
+    border: '1px solid rgba(184, 253, 2, 0.3)',
+    borderRadius: '16px',
     fontSize: '12px',
-    color: '#0f172a',
-    boxShadow: '0 8px 24px rgba(15,23,42,0.08)'
+    color: '#FEF9F5',
+    boxShadow: '0 12px 32px rgba(0,0,0,0.7)'
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-73px)] bg-[#F3F6FB] text-slate-900">
-      <Sidebar />
+    <main className="flex-1 p-4 sm:p-8 space-y-8 max-w-7xl mx-auto overflow-x-hidden min-w-0 text-[#FEF9F5]">
 
-      <main className="flex-1 p-6 sm:p-8 space-y-8 max-w-7xl mx-auto overflow-x-hidden">
-
-        {/* Header */}
+        {/* Header Banner */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-panel p-6 rounded-3xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="glass-panel p-6 sm:p-8 rounded-3xl bg-[#16181C] border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" /> Administrator Control Portal
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-3 py-1 rounded-full bg-[#B8FD02]/15 border border-[#B8FD02]/40 text-[#B8FD02] text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5" /> SoftnoveX Control Center
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Real-Time Platform Analytics</h1>
-            <p className="text-slate-500 text-sm mt-0.5">Live monitoring of user retention, plan generation, chat safety & system health</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#FEF9F5] tracking-tight uppercase">
+              Platform & AI Analytics
+            </h1>
+            <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+              Live telemetry on user retention, Gemini plan generations, RAG chat volume & system health
+            </p>
           </div>
 
           <button
             onClick={fetchAnalytics}
             disabled={refreshing}
-            className="btn-secondary text-xs font-bold flex items-center gap-2"
+            className="btn-secondary text-xs font-black uppercase tracking-wider flex items-center gap-2 px-4 py-2.5"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh Metrics
+            <RefreshCw className={`w-3.5 h-3.5 text-[#B8FD02] ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh Telemetry
           </button>
         </motion.div>
 
@@ -97,93 +96,103 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <motion.div
             whileHover={{ y: -4 }}
-            className="glass-card p-6 rounded-3xl border border-slate-200 space-y-3"
+            className="glass-card p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Registered Users</span>
-              <Users className="w-5 h-5 text-emerald-600" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Members</span>
+              <Users className="w-5 h-5 text-[#B8FD02]" />
             </div>
-            <p className="text-3xl font-extrabold text-slate-900">{analytics.totalUsers || 1}</p>
-            <p className="text-xs text-emerald-600 flex items-center gap-1 font-semibold">
+            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.totalUsers || 1}</p>
+            <p className="text-xs text-[#B8FD02] flex items-center gap-1 font-bold">
               <TrendingUp className="w-3.5 h-3.5" /> {analytics.activeUsers || 1} Active Accounts
             </p>
           </motion.div>
 
           <motion.div
             whileHover={{ y: -4 }}
-            className="glass-card p-6 rounded-3xl border border-slate-200 space-y-3"
+            className="glass-card p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">AI Plans Generated</span>
-              <Sparkles className="w-5 h-5 text-cyan-600" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Plans Generated</span>
+              <Sparkles className="w-5 h-5 text-cyan-400" />
             </div>
-            <p className="text-3xl font-extrabold text-slate-900">{analytics.totalPlansGenerated || 1}</p>
-            <p className="text-xs text-cyan-600 font-semibold">{analytics.planCompletionRate || 84.2}% Completion Rate</p>
+            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.totalPlansGenerated || 1}</p>
+            <p className="text-xs text-cyan-400 font-bold">{analytics.planCompletionRate || 84.2}% Completion Rate</p>
           </motion.div>
 
           <motion.div
             whileHover={{ y: -4 }}
-            className="glass-card p-6 rounded-3xl border border-slate-200 space-y-3"
+            className="glass-card p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Avg. Fitness Score</span>
-              <Activity className="w-5 h-5 text-amber-600" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg. Fitness Score</span>
+              <Activity className="w-5 h-5 text-amber-400" />
             </div>
-            <p className="text-3xl font-extrabold text-slate-900">{analytics.averageFitnessScore || 78.4}</p>
-            <p className="text-xs text-amber-600 font-semibold">Out of 100 Index</p>
+            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.averageFitnessScore || 78.4}</p>
+            <p className="text-xs text-amber-400 font-bold">Out of 100 Health Index</p>
           </motion.div>
 
           <motion.div
             whileHover={{ y: -4 }}
-            className="glass-card p-6 rounded-3xl border border-slate-200 space-y-3"
+            className="glass-card p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Flagged Chat Queries</span>
-              <ShieldAlert className="w-5 h-5 text-rose-600" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Flagged Chat Queries</span>
+              <ShieldAlert className="w-5 h-5 text-rose-400" />
             </div>
-            <p className="text-3xl font-extrabold text-rose-600">{analytics.flaggedChatsCount || 0}</p>
-            <p className="text-xs text-rose-600 font-semibold">Requires Moderation Review</p>
+            <p className="text-3xl font-black text-rose-400">{analytics.flaggedChatsCount || 0}</p>
+            <p className="text-xs text-rose-400 font-bold">Requires Moderation Review</p>
           </motion.div>
         </div>
 
         {/* Analytics Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* User Registration & Active Engagement Area Chart */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4">
+          {/* Area Chart */}
+          <div className="glass-panel p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-violet-600" /> Weekly Platform Volume & AI Usage
+              <h3 className="font-black text-[#FEF9F5] text-sm uppercase tracking-wider flex items-center gap-2">
+                <BarChart2 className="w-4 h-4 text-[#B8FD02]" /> Weekly Platform Volume & AI Usage
               </h3>
-              <span className="badge-purple">Live Sync</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#B8FD02]/15 text-[#B8FD02] border border-[#B8FD02]/40">
+                Live Sync
+              </span>
             </div>
 
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendData}>
-                <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <defs>
+                  <linearGradient id="aiChatsGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#B8FD02" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#B8FD02" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="day" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="chats" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.15} strokeWidth={2} name="AI Chat Queries" />
-                <Area type="monotone" dataKey="plans" stroke="#0EA5E9" fill="transparent" strokeWidth={2} name="Plans Generated" />
+                <Area type="monotone" dataKey="chats" stroke="#B8FD02" fill="url(#aiChatsGrad)" strokeWidth={2.5} name="AI Chat Queries" />
+                <Area type="monotone" dataKey="plans" stroke="#38bdf8" fill="transparent" strokeWidth={2} name="Plans Generated" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          {/* AI Plan Execution Distribution */}
-          <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4">
+          {/* Bar Chart */}
+          <div className="glass-panel p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-cyan-600" /> Daily Plan Generations Trend
+              <h3 className="font-black text-[#FEF9F5] text-sm uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400" /> Daily Plan Generations Trend
               </h3>
-              <span className="badge-emerald">Gemini AI</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/40">
+                Gemini 1.5 Flash
+              </span>
             </div>
 
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={trendData} barSize={24}>
-                <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="day" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="plans" fill="#10B981" radius={[8, 8, 0, 0]} name="Plans" />
+                <Bar dataKey="plans" fill="#B8FD02" radius={[8, 8, 0, 0]} name="Plans" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -191,22 +200,22 @@ export default function AdminDashboard() {
         </div>
 
         {/* System Audit Action Log */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-            <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
-              System Audit Logs <ShieldCheck className="w-5 h-5 text-violet-600" />
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl bg-[#16181C] border border-slate-800 space-y-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <h3 className="font-black text-lg text-[#FEF9F5] uppercase tracking-tight flex items-center gap-2">
+              System Audit Logs <ShieldCheck className="w-5 h-5 text-[#B8FD02]" />
             </h3>
 
             <div className="flex items-center gap-2 text-xs">
-              <Filter className="w-3.5 h-3.5 text-slate-500" />
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
               {['ALL', 'BAN', 'OVERRIDE', 'PROMPT'].map((filterKey) => (
                 <button
                   key={filterKey}
                   onClick={() => setLogFilter(filterKey)}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                  className={`px-3 py-1.5 rounded-xl font-black uppercase text-[11px] tracking-wider transition-all border ${
                     logFilter === filterKey
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'glass-card text-slate-500 hover:text-slate-900 border border-slate-200'
+                      ? 'bg-[#B8FD02] text-[#0B0C0E] border-[#B8FD02] shadow-md shadow-[#B8FD02]/20'
+                      : 'bg-[#0B0C0E] text-slate-400 border-slate-800 hover:text-white'
                   }`}
                 >
                   {filterKey}
@@ -217,17 +226,17 @@ export default function AdminDashboard() {
 
           <div className="space-y-3">
             {filteredLogs.length === 0 ? (
-              <p className="text-slate-500 text-sm py-4 text-center">No administrative actions logged under this filter.</p>
+              <p className="text-slate-500 text-sm py-6 text-center">No administrative actions logged under this filter.</p>
             ) : (
               filteredLogs.map((log, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                <div key={idx} className="p-4 rounded-2xl bg-[#0B0C0E] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-violet-700 px-2.5 py-1 rounded-lg bg-violet-50 border border-violet-200">
+                    <span className="font-black text-[#B8FD02] px-2.5 py-1 rounded-lg bg-[#B8FD02]/15 border border-[#B8FD02]/30 uppercase text-[10px]">
                       {log.action}
                     </span>
-                    <span className="text-slate-700 font-medium">{log.details}</span>
+                    <span className="text-slate-300 font-medium">{log.details}</span>
                   </div>
-                  <span className="text-slate-500 flex items-center gap-1 font-mono">
+                  <span className="text-slate-500 flex items-center gap-1 font-mono text-[11px]">
                     <Clock className="w-3 h-3" /> {new Date(log.createdAt || Date.now()).toLocaleTimeString()}
                   </span>
                 </div>
@@ -236,7 +245,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-      </main>
-    </div>
+    </main>
   );
 }

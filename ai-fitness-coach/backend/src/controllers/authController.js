@@ -72,10 +72,11 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const cleanEmail = email?.trim().toLowerCase();
     const isDbConnected = mongoose.connection.readyState === 1;
 
     if (isDbConnected) {
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email: cleanEmail });
       if (!user) return res.status(400).json({ message: 'Invalid credentials' });
       const isMatch = await user.comparePassword(password);
       if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
@@ -93,7 +94,7 @@ export const loginUser = async (req, res) => {
     }
 
     // In-memory fallback handler
-    const user = memoryStore.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const user = memoryStore.users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }

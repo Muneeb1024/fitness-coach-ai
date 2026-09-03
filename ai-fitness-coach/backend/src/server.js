@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 });
 
 // Database connection
-// connectDB();
+connectDB();
 
 // Health check
 app.get('/api/health', (req, res) => {
