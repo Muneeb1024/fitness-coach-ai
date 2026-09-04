@@ -18,8 +18,8 @@ const features = [
     icon: Camera,
     color: 'text-[#B8FD02]',
     bg: 'bg-[#B8FD02]/10 border-[#B8FD02]/30',
-    title: '4-Angle Computer Vision Scan',
-    desc: 'Automated 33-landmark pose detection from Front, Back, Left, and Right photos. Evaluates posture balance, spinal alignment, and accurate BMI modeling.'
+    title: '4-Angle Body Snapshot & AI Metrics',
+    desc: 'Upload Front, Back, Left, and Right photos as your visual baseline. BMI, body-fat estimate and healthy range are calculated from your measurements — in-photo landmark vision analysis is on the roadmap.'
   },
   {
     icon: Sparkles,
@@ -47,21 +47,21 @@ const features = [
     color: 'text-[#B8FD02]',
     bg: 'bg-[#B8FD02]/10 border-[#B8FD02]/30',
     title: 'Admin Governance Console',
-    desc: 'Enterprise-grade administrative suite with live KPI analytics, real-time plan override studio, and system prompt tuning.'
+    desc: 'Full administrative suite with real KPI analytics, moderation console, plan override studio, and system prompt tuning.'
   },
   {
     icon: Zap,
     color: 'text-[#FEF9F5]',
     bg: 'bg-[#16181C] border-slate-700',
-    title: 'Real-Time Socket Architecture',
-    desc: 'Socket.IO live event streaming pushes trainer plan modifications and real-time habit updates without page reloads.'
+    title: 'Live Plan Override Push',
+    desc: 'Socket.IO streams trainer plan overrides to your dashboard instantly — no page reload needed when your coach updates your plan.'
   }
 ];
 
 const stats = [
-  { value: '33', label: 'Biometric Landmarks', unit: ' Pts' },
+  { value: '4', label: 'Body Snapshot Angles', unit: '' },
   { value: '100%', label: 'Free Public Beta', unit: '' },
-  { value: '24/7', label: 'RAG Neural Coach', unit: '' },
+  { value: '24/7', label: 'AI RAG Coach', unit: '' },
   { value: '<2s', label: 'Plan Generation', unit: '' },
 ];
 
@@ -94,14 +94,14 @@ export default function Landing() {
             className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.08] max-w-5xl mx-auto uppercase"
           >
             Autonomous Fitness Intelligence with{' '}
-            <span className="text-[#B8FD02]">Computer Vision & AI</span>
+            <span className="text-[#B8FD02]">AI Coaching</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
             className="mt-6 text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal"
           >
-            Upload 4 body posture photos for automated biometric analysis. Experience custom allergy-aware nutrition protocols, tailored training splits, and a context-aware 24/7 AI Coach.
+            Upload body snapshot photos (optional) and get AI-calculated metrics, custom allergy-aware nutrition protocols, tailored training splits, and a context-aware 24/7 AI Coach.
           </motion.p>
 
           <motion.div variants={itemVariants} className="mt-10 flex flex-wrap gap-4 justify-center items-center">
@@ -143,7 +143,7 @@ export default function Landing() {
                 <span className="w-3 h-3 rounded-full bg-[#B8FD02]" />
                 <span className="text-xs font-bold text-slate-300 ml-2 uppercase tracking-wider">FitVision · Active Session</span>
               </div>
-              <span className="badge-fitgreen">Live Biometrics</span>
+              <span className="badge-fitgreen">Example Session</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

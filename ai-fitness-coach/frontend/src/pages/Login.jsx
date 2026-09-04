@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
-import { Dumbbell, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { Dumbbell, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -29,11 +29,6 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = () => {
-    setForm({ email: 'user@fitvision.ai', password: 'password123' });
-    toast.success('Loaded demo credentials for testing');
   };
 
   return (

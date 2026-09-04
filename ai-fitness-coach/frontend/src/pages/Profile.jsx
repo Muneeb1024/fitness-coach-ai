@@ -555,10 +555,10 @@ export default function Profile() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-lg font-black uppercase text-[#FEF9F5] flex items-center gap-2">
-                      <Camera className="w-5 h-5 text-[#B8FD02]" /> 4-Angle Biometric Body & Posture Scans
+                      <Camera className="w-5 h-5 text-[#B8FD02]" /> 4-Angle Body Snapshot & Metrics
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Automated 33-point computer vision posture landmark analysis across Front, Back, Left, and Right angles
+                      Store Front, Back, Left, and Right photos as your visual baseline. BMI & body-fat estimates are calculated from your measurements.
                     </p>
                   </div>
 
@@ -568,7 +568,7 @@ export default function Profile() {
                     className="btn-primary text-xs px-5 py-2.5 uppercase tracking-wider"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${scanning ? 'animate-spin' : ''}`} />
-                    {scanning ? 'Processing Scan...' : 'Analyze & Update Scan'}
+                    {scanning ? 'Updating metrics...' : 'Save Photos & Recalculate'}
                   </button>
                 </div>
 
@@ -579,12 +579,12 @@ export default function Profile() {
                       ✓
                     </div>
                     <div>
-                      <p className="text-xs font-black text-[#FEF9F5] uppercase">Vision Status</p>
-                      <p className="text-xs text-[#B8FD02] font-semibold">{user?.bodyMetrics?.postureStatus || 'Normal posture detected'}</p>
+                      <p className="text-xs font-black text-[#FEF9F5] uppercase">Snapshot Status</p>
+                      <p className="text-xs text-[#B8FD02] font-semibold">{user?.bodyMetrics?.postureStatus || 'No snapshot yet — save your photos above.'}</p>
                     </div>
                   </div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase hidden sm:block">
-                    MediaPipe Landmark Active
+                    Metrics Estimated (no CV model)
                   </span>
                 </div>
 

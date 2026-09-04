@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { io } from 'socket.io-client';
 import API from '../services/api';
 import { Sparkles, Utensils, Dumbbell, ShieldCheck, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 
@@ -12,6 +13,35 @@ export default function Plans() {
 
   useEffect(() => {
     fetchMyPlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Real-time plan overrides from the admin Plan Override Studio.
+  useEffect(() => {
+    const token = localStorage.getItem('fitness_auth_token');
+    if (!token) return undefined;
+
+    let userId = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      userId = payload.userId || payload.sub || null;
+    } catch {
+      userId = null;
+    }
+    if (!userId) return undefined;
+
+    const base = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '');
+    const socket = io(base || undefined, { transports: ['websocket', 'polling'] });
+    socket.on('connect', () => socket.emit('join_user_room', String(userId)));
+    socket.on('plan_override', (data) => {
+      toast(data?.message || 'Your plan was just updated by your coach.');
+      fetchMyPlan();
+    });
+    socket.on('connect_error', () => {
+      // Real-time unavailable (e.g. dev proxy) — page still works on refresh.
+    });
+    return () => socket.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMyPlan = async () => {

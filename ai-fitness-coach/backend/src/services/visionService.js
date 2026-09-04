@@ -1,6 +1,12 @@
 /**
- * Vision Service: MediaPipe Computer Vision Body & Posture Analysis Pipeline.
- * Dynamically computes BMI, Body Fat %, Ideal Weight Range, and 33-Landmark Pose Alignment.
+ * Body Metrics Estimation Service.
+ *
+ * IMPORTANT — honest scope: these values are CALCULATED ESTIMATES derived from
+ * the user's height/weight/age/gender inputs (BMI, Deurenberg body-fat formula,
+ * healthy weight range). Photos are stored as a visual snapshot only.
+ * There is NO computer-vision / landmark / MediaPipe processing in this codebase
+ * yet — real CV pose analysis is a planned future feature. Do not present these
+ * outputs as vision measurements.
  */
 export const analyzeBodyImages = async ({ heightCm = 175, weightKg = 70, age = 25, gender = 'Male', images = {} }) => {
   const hMeters = Number(heightCm) / 100 || 1.75;
@@ -27,22 +33,20 @@ export const analyzeBodyImages = async ({ heightCm = 175, weightKg = 70, age = 2
   const minIdealKg = parseFloat((18.5 * hMeters * hMeters).toFixed(1));
   const maxIdealKg = parseFloat((24.9 * hMeters * hMeters).toFixed(1));
 
-  // 5. MediaPipe 33-Keypoint Pose Alignment Landmarks
-  const bodyLandmarks = {
-    nose: { x: 0.50, y: 0.15, z: -0.10, visibility: 0.99 },
-    leftShoulder: { x: 0.42, y: 0.28, z: -0.05, visibility: 0.98 },
-    rightShoulder: { x: 0.58, y: 0.28, z: -0.05, visibility: 0.98 },
-    leftHip: { x: 0.44, y: 0.55, z: 0.00, visibility: 0.97 },
-    rightHip: { x: 0.56, y: 0.55, z: 0.00, visibility: 0.97 },
-    leftKnee: { x: 0.43, y: 0.75, z: 0.05, visibility: 0.96 },
-    rightKnee: { x: 0.57, y: 0.75, z: 0.05, visibility: 0.96 },
-    leftAnkle: { x: 0.43, y: 0.92, z: 0.10, visibility: 0.95 },
-    rightAnkle: { x: 0.57, y: 0.92, z: 0.10, visibility: 0.95 }
-  };
+  // 5. No vision/landmark data exists yet — keep the payload field empty so
+  //    nothing downstream can present fabricated landmark coordinates as real.
+  const bodyLandmarks = {};
 
-  // 6. Posture Assessment String
-  const processedCount = Object.keys(images).length || 4;
-  const postureStatus = `MediaPipe Pose Analysis (${processedCount} photos): Posture is balanced. Shoulder tilt variance is within 0.8%. Estimated Body Fat: ${estimatedBodyFatPct}% (Bmi: ${estimatedBmi} - ${bmiCategory}). Target weight range: ${minIdealKg}kg - ${maxIdealKg}kg.`;
+  // 6. Posture / snapshot status string — honest wording.
+  const photoEntries = Object.values(images || {}).filter((v) => typeof v === 'string' && v.length > 0);
+  const processedCount = photoEntries.length;
+  const photoNote = processedCount > 0
+    ? `${processedCount} photo(s) stored as your visual snapshot.`
+    : 'No photos provided.';
+  const postureStatus =
+    `${photoNote} Metrics are ESTIMATED from your measurements (BMI ${estimatedBmi} · ${bmiCategory}, ` +
+    `est. body fat ${estimatedBodyFatPct}%, healthy weight range ${minIdealKg}–${maxIdealKg} kg). ` +
+    `Computer-vision landmark analysis is not enabled yet.`;
 
   return {
     estimatedBmi,
@@ -52,6 +56,6 @@ export const analyzeBodyImages = async ({ heightCm = 175, weightKg = 70, age = 2
     postureStatus,
     bodyLandmarks,
     processedImageCount: processedCount,
-    disclaimer: 'Note: Visual body analysis, body fat % and BMI estimates are automated approximations and not medically certified.'
+    disclaimer: 'Note: BMI, body-fat % and related estimates are calculated approximations from your measurements — they are not vision-based and are not medically certified.'
   };
 };

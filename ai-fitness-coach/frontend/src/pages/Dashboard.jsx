@@ -48,14 +48,17 @@ export default function Dashboard() {
   const [history, setHistory] = useState([]);
   const [rawHistory, setRawHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [dateLoading, setDateLoading] = useState(false);
   const [updating, setUpdating] = useState('');
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
+    setLoadError('');
     try {
       const [progRes, histRes, planRes] = await Promise.all([
         API.get(`/progress/daily?date=${selectedDate}`),
@@ -74,6 +77,8 @@ export default function Dashboard() {
         sleep: d.sleepHours || 0
       })));
     } catch (err) {
+      const msg = err.response?.data?.message || 'Could not load dashboard data. Check your connection and try again.';
+      setLoadError(msg);
       toast.error('Could not load dashboard data');
     } finally {
       setLoading(false);
@@ -162,6 +167,19 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6 text-[#FEF9F5]">
+
+      {loadError && (
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span className="flex-1">{loadError}</span>
+          <button
+            onClick={fetchData}
+            className="px-4 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 text-xs font-bold uppercase tracking-wider transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Welcome Banner */}
       <motion.div

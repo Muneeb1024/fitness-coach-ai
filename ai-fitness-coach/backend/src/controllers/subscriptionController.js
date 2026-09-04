@@ -6,7 +6,7 @@ import { memoryStore } from '../services/store.js';
 export const TIER_LIMITS = {
   free: {
     title: 'Free Plan',
-    plansPerMonth: 1,
+    plansPerMonth: 10,
     ragMessagesPerDay: 5,
     postureAnalysis: 'Basic BMI & Estimated Fat',
     customOverrides: false,
@@ -16,7 +16,7 @@ export const TIER_LIMITS = {
     title: 'Pro Coach',
     plansPerMonth: 999,
     ragMessagesPerDay: 999,
-    postureAnalysis: 'Full 33-Landmark Posture Scan',
+    postureAnalysis: 'Photo Snapshot + AI-Estimated Body Metrics',
     customOverrides: false,
     prioritySupport: true
   },
@@ -24,7 +24,7 @@ export const TIER_LIMITS = {
     title: 'Elite VIP',
     plansPerMonth: 999,
     ragMessagesPerDay: 999,
-    postureAnalysis: 'Full 33-Landmark Posture Scan + 3D Mesh',
+    postureAnalysis: 'Photo Snapshot + AI-Estimated Body Metrics',
     customOverrides: true,
     prioritySupport: true
   }

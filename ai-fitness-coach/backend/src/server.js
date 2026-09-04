@@ -1,6 +1,21 @@
 import dotenv from 'dotenv';
 dotenv.config(); // MUST be first — loads .env before any other module initializes
 
+// Startup environment guard — warns (never blocks) about weak/missing secrets.
+(function checkEnvironmentSecrets() {
+  const jwtSecret = process.env.JWT_SECRET || '';
+  if (!jwtSecret) {
+    console.warn('\x1b[33m[Security]\x1b[0m JWT_SECRET is not set — signing in will fail. Set a strong random secret.');
+  } else if (jwtSecret.length < 32) {
+    console.warn('\x1b[33m[Security]\x1b[0m JWT_SECRET is shorter than 32 characters — use a long random string in production.');
+  }
+  if (!process.env.MONGO_URI) {
+    console.warn('\x1b[33m[Security]\x1b[0m MONGO_URI is not set — running on the in-memory fallback store only.');
+  }
+})();
+
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -17,6 +32,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
+import { setSocketIo } from './services/socketEmitter.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -28,7 +44,9 @@ app.use(helmet({
 }));
 
 // CORS: allow the frontend dev server + any extra origins via env (comma-separated).
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
+// ALLOWED_ORIGINS is the canonical variable; CORS_ORIGINS is kept as a fallback
+// for compatibility with earlier deployments.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || 'http://localhost:3000')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
@@ -45,9 +63,23 @@ const io = new Server(server, {
   cors: { origin: allowedOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] }
 });
 
-// Global middleware — 20mb for base64 food image uploads
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+// Give controllers access to emit live events (plan overrides, etc.)
+setSocketIo(io);
+
+// Extra hardening headers on top of helmet (CSP stays disabled intentionally —
+// the SPA injects inline styles; revisit when a non-inline build is adopted).
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+// Body parsers — tight default JSON limit (413 on overflow). Routes that
+// legitimately carry base64 image payloads (food photo logs, user photos)
+// opt into a larger limit via path-scoped parsers registered first.
+app.use('/api/food', express.json({ limit: '25mb' }));
+app.use('/api/user', express.json({ limit: '25mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Request logger
 app.use((req, res, next) => {
@@ -60,8 +92,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Database connection
-connectDB();
+// Database connection (skipped under `npm test` — the suite runs against the
+// in-memory fallback store and must never touch the shared MongoDB).
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -106,12 +141,17 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` });
 });
 
-// Global error handler
+// Global error handler — never leaks stack traces outside development,
+// and body-parser size overflows surface as a clean JSON 413.
 app.use((err, req, res, next) => {
-  console.error('\x1b[31m[Global Error]\x1b[0m', err.message);
-  res.status(err.status || 500).json({
+  const isPayloadTooLarge = err.type === 'entity.too.large' || err.status === 413;
+  const status = isPayloadTooLarge ? 413 : (err.status || err.statusCode || 500);
+  console.error(`\x1b[31m[Global Error]\x1b[0m ${status}:`, err.message);
+  res.status(status).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message: isPayloadTooLarge
+      ? 'Request body too large.'
+      : (status >= 500 ? 'Internal Server Error' : (err.message || 'Request failed')),
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
@@ -135,4 +175,13 @@ const startServer = async () => {
     }
 };
 
-startServer();
+// Export the app + HTTP server so the test suite can boot its own listener on
+// an ephemeral port (see test/helpers.mjs).
+export { app, server };
+
+// Auto-start only when run directly (npm start / node src/server.js). Under
+// `npm test` the suite imports the app and listens itself.
+const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (process.env.NODE_ENV !== 'test' && isDirectRun) {
+  startServer();
+}

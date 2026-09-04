@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
@@ -5,37 +6,137 @@ import { Plan } from '../models/Plan.js';
 import { ChatLog } from '../models/ChatLog.js';
 import { AdminLog } from '../models/AdminLog.js';
 import { memoryStore } from '../services/store.js';
+import { emitPlanOverride } from '../services/socketEmitter.js';
 import { getSystemPrompt, setSystemPrompt, defaultSystemPrompt } from '../services/promptTemplateService.js';
+
+/** Labels for the last 7 calendar days (oldest first). */
+function lastSevenDayLabels() {
+  const labels = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    labels.push({ key: d.toISOString().split('T')[0], label: d.toLocaleDateString('en-US', { weekday: 'short' }) });
+  }
+  return labels;
+}
+
+function fillTrend(countsByDate) {
+  return lastSevenDayLabels().map(({ key, label }) => ({
+    day: label,
+    date: key,
+    users: countsByDate.users[key] || 0,
+    plans: countsByDate.plans[key] || 0,
+    chats: countsByDate.chats[key] || 0
+  }));
+}
+
+function round1(n) {
+  return Math.round((n || 0) * 10) / 10;
+}
 
 export const getAdminAnalytics = async (req, res) => {
   try {
     const isDbConnected = mongoose.connection.readyState === 1;
+
     if (isDbConnected) {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 6);
+      weekAgo.setHours(0, 0, 0, 0);
+
       const totalUsers = await User.countDocuments({ role: 'user' });
       const activeUsers = await User.countDocuments({ role: 'user', status: 'active' });
       const bannedUsers = await User.countDocuments({ role: 'user', status: 'banned' });
       const totalPlansGenerated = await Plan.countDocuments();
       const flaggedChatsCount = await ChatLog.countDocuments({ flagged: true });
+
+      // Real averages — never fabricated.
+      const avgAgg = await User.aggregate([
+        { $match: { role: 'user', fitnessScore: { $gt: 0 } } },
+        { $group: { _id: null, avg: { $avg: '$fitnessScore' } } }
+      ]);
+      const averageFitnessScore = round1(avgAgg[0]?.avg);
+
       const recentUsers = await User.find({ role: 'user' }).sort({ createdAt: -1 }).limit(5).select('-password');
       const recentAdminLogs = await AdminLog.find().sort({ createdAt: -1 }).limit(10).populate('adminId', 'name email');
+      const recentPlans = await Plan.find()
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('title dietPlan workoutPlan isCustomOverride version createdAt')
+        .lean();
+
+      // Weekly trend from real counts.
+      const usersByDate = await User.aggregate([
+        { $match: { role: 'user', createdAt: { $gte: weekAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, n: { $sum: 1 } } }
+      ]);
+      const plansByDate = await Plan.aggregate([
+        { $match: { createdAt: { $gte: weekAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, n: { $sum: 1 } } }
+      ]);
+      const chatByDate = await ChatLog.aggregate([
+        { $unwind: '$messages' },
+        { $match: { 'messages.sender': 'ai', 'messages.timestamp': { $gte: weekAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$messages.timestamp' } }, n: { $sum: 1 } } }
+      ]);
+      const toMap = (rows) => Object.fromEntries(rows.map((r) => [r._id, r.n]));
+      const weeklyTrend = fillTrend({
+        users: toMap(usersByDate),
+        plans: toMap(plansByDate),
+        chats: toMap(chatByDate)
+      });
 
       return res.json({
-        analytics: { totalUsers, activeUsers, bannedUsers, totalPlansGenerated, flaggedChatsCount, averageFitnessScore: 78.4, planCompletionRate: 84.2 },
+        analytics: {
+          totalUsers,
+          activeUsers,
+          bannedUsers,
+          totalPlansGenerated,
+          flaggedChatsCount,
+          averageFitnessScore,
+          // Plan completion is not tracked yet — null, never a fake percentage.
+          planCompletionRate: null,
+          weeklyTrend
+        },
         recentUsers,
-        recentAdminLogs
+        recentAdminLogs,
+        recentPlans
       });
     }
 
-    const totalUsers = memoryStore.users.filter((u) => u.role === 'user').length;
-    const activeUsers = memoryStore.users.filter((u) => u.role === 'user' && u.status === 'active').length;
-    const bannedUsers = memoryStore.users.filter((u) => u.role === 'user' && u.status === 'banned').length;
-    const totalPlansGenerated = memoryStore.plans.length;
-    const flaggedChatsCount = memoryStore.chatLogs.filter((c) => c.flagged).length;
+    const storeUsers = memoryStore.users || [];
+    const storePlans = memoryStore.plans || [];
+    const storeChats = memoryStore.chatLogs || [];
+
+    const users = storeUsers.filter((u) => u.role === 'user');
+    const counts = { users: {}, plans: {}, chats: {} };
+    const dayKey = (d) => (d ? new Date(d).toISOString().split('T')[0] : '');
+    users.forEach((u) => { const k = dayKey(u.createdAt); if (k) counts.users[k] = (counts.users[k] || 0) + 1; });
+    storePlans.forEach((p) => { const k = dayKey(p.createdAt); if (k) counts.plans[k] = (counts.plans[k] || 0) + 1; });
+    storeChats.forEach((c) => {
+      (c.messages || []).forEach((m) => {
+        if (m.sender === 'ai') { const k = dayKey(m.timestamp); if (k) counts.chats[k] = (counts.chats[k] || 0) + 1; }
+      });
+    });
+
+    const scored = users.filter((u) => Number(u.fitnessScore || 0) > 0);
+    const averageFitnessScore = scored.length
+      ? round1(scored.reduce((s, u) => s + Number(u.fitnessScore || 0), 0) / scored.length)
+      : null;
 
     res.json({
-      analytics: { totalUsers, activeUsers, bannedUsers, totalPlansGenerated, flaggedChatsCount, averageFitnessScore: 78.4, planCompletionRate: 84.2 },
-      recentUsers: memoryStore.users.filter((u) => u.role === 'user'),
-      recentAdminLogs: memoryStore.adminLogs
+      analytics: {
+        totalUsers: users.length,
+        activeUsers: users.filter((u) => u.status === 'active').length,
+        bannedUsers: users.filter((u) => u.status === 'banned').length,
+        totalPlansGenerated: storePlans.length,
+        flaggedChatsCount: storeChats.filter((c) => c.flagged).length,
+        averageFitnessScore,
+        planCompletionRate: null,
+        weeklyTrend: fillTrend(counts)
+      },
+      recentUsers: users.slice(0, 5),
+      recentAdminLogs: memoryStore.adminLogs || [],
+      recentPlans: storePlans.slice(0, 10)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -104,6 +205,7 @@ export const overrideUserPlan = async (req, res) => {
       plan.overrideNotes = notes || 'Manually customized by system administrator';
       plan.version += 1;
       await plan.save();
+      emitPlanOverride(userId, { planId: String(plan._id), version: plan.version, message: 'Your fitness plan was just updated by your coach.' });
       return res.json({ message: 'User plan overridden successfully', plan });
     }
 
@@ -117,6 +219,7 @@ export const overrideUserPlan = async (req, res) => {
     plan.isCustomOverride = true;
     plan.overrideNotes = notes || 'Manually customized by system administrator';
     plan.version += 1;
+    emitPlanOverride(userId, { planId: String(plan._id || ''), version: plan.version, message: 'Your fitness plan was just updated by your coach.' });
 
     res.json({ message: 'User plan overridden successfully', plan });
   } catch (error) {
@@ -292,28 +395,130 @@ export const resetUserPassword = async (req, res) => {
   }
 };
 
-// ─── Forgot Password (user self-service) ─────────────────────────────────────
+// ─── Forgot / Reset Password (user self-service) ─────────────────────────────
 
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+// No email transport exists in the stack yet (founder decision pending: add a
+// mailer such as Resend/Nodemailer). Until then, reset tokens can only be
+// surfaced in development — never accept a password change without proof.
+const RESET_EMAIL_CONFIGURED = false;
+
+function sha256Hex(value) {
+  return crypto.createHash('sha256').update(String(value)).digest('hex');
+}
+
+function sameHex(a, b) {
+  const ba = Buffer.from(String(a ?? ''), 'hex');
+  const bb = Buffer.from(String(b ?? ''), 'hex');
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
+}
+
+/**
+ * Step 1 — request a reset token.
+ * Accepts ONLY an email. Creates a single-use token (stored hashed, 30 min
+ * expiry) and surfaces it via the dev-mode channel. NEVER changes the password
+ * in this call. Responds uniformly so emails cannot be enumerated.
+ */
 export const forgotPassword = async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
-    if (!email || !newPassword) return res.status(400).json({ message: 'Email and new password are required' });
-    if (newPassword.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    const { email } = req.body || {};
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail) return res.status(400).json({ message: 'Email is required' });
+
+    // Production: refuse politely until an email transport is configured.
+    if (process.env.NODE_ENV === 'production' && !RESET_EMAIL_CONFIGURED) {
+      return res.status(503).json({
+        message: 'Password reset is not available yet. Please contact support.'
+      });
+    }
+
     const isDbConnected = mongoose.connection.readyState === 1;
 
+    const genericMessage = 'If an account exists for that email, a reset token has been issued.';
+    const devVisible = process.env.NODE_ENV !== 'production' || process.env.RESET_TOKEN_DEBUG === 'true';
+    const includeTokenInResponse = process.env.RESET_TOKEN_DEBUG === 'true';
+
+    const issueToken = async (user) => {
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+      if (isDbConnected) {
+        user.passwordResetTokenHash = sha256Hex(token);
+        user.passwordResetExpiresAt = expiresAt;
+        await user.save();
+      } else {
+        user.resetTokenHash = sha256Hex(token);
+        user.resetTokenExpiresAt = expiresAt;
+      }
+      if (devVisible) {
+        console.log(`\x1b[33m[Auth]\x1b[0m Password reset token for ${user.email}: ${token}  (expires in 30 minutes)`);
+      }
+      return token;
+    };
+
+    const payload = { message: genericMessage };
+
     if (isDbConnected) {
-      const user = await User.findOne({ email: email.trim().toLowerCase() });
-      if (!user) return res.status(404).json({ message: 'No account found with this email' });
-      user.password = newPassword;
+      const user = await User.findOne({ email: cleanEmail });
+      if (!user) return res.json(payload);
+      const token = await issueToken(user);
+      if (includeTokenInResponse) payload.devToken = token;
+      return res.json(payload);
+    }
+
+    const user = memoryStore.users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (!user) return res.json(payload);
+    const token = await issueToken(user);
+    if (includeTokenInResponse) payload.devToken = token;
+    return res.json(payload);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Step 2 — redeem a reset token.
+ * Requires email + token + newPassword. Token must exist, be unexpired, and
+ * match the stored hash; it is single-use and cleared after success.
+ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, token, newPassword } = req.body || {};
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanToken = String(token || '').trim();
+    if (!cleanEmail || !cleanToken) {
+      return res.status(400).json({ message: 'Email and reset token are required' });
+    }
+    if (!newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    const isDbConnected = mongoose.connection.readyState === 1;
+    const fail = () => res.status(400).json({ message: 'Invalid or expired reset token.' });
+
+    if (isDbConnected) {
+      const user = await User.findOne({ email: cleanEmail });
+      if (!user || !user.passwordResetTokenHash || !user.passwordResetExpiresAt) return fail();
+      if (new Date() > user.passwordResetExpiresAt) return fail();
+      if (!sameHex(user.passwordResetTokenHash, sha256Hex(cleanToken))) return fail();
+
+      user.password = String(newPassword);
+      user.passwordResetTokenHash = null;
+      user.passwordResetExpiresAt = null;
       await user.save();
       return res.json({ message: 'Password updated successfully. You can now sign in.' });
     }
 
-    const user = memoryStore.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-    if (!user) return res.status(404).json({ message: 'No account found with this email' });
+    const user = memoryStore.users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (!user || !user.resetTokenHash || !user.resetTokenExpiresAt) return fail();
+    if (new Date() > user.resetTokenExpiresAt) return fail();
+    if (!sameHex(user.resetTokenHash, sha256Hex(cleanToken))) return fail();
+
     const salt = await bcrypt.genSalt(10);
-    user.passwordHash = await bcrypt.hash(newPassword, salt);
-    res.json({ message: 'Password updated successfully. You can now sign in.' });
+    user.passwordHash = await bcrypt.hash(String(newPassword), salt);
+    user.resetTokenHash = null;
+    user.resetTokenExpiresAt = null;
+    return res.json({ message: 'Password updated successfully. You can now sign in.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

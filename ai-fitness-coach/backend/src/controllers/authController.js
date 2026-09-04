@@ -4,10 +4,24 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { memoryStore } from '../services/store.js';
 
+const ALLOWED_GOALS = ['weight_loss', 'muscle_gain', 'maintenance', 'athletic'];
+
+/** Normalize goals.primaryGoal to the model's snake_case enum so a malformed
+ *  client (e.g. "Maintenance" or "muscle gain") never hits a confusing
+ *  Mongoose validation error. */
+function normalizeGoals(goals) {
+  const raw = goals && goals.primaryGoal
+    ? String(goals.primaryGoal).trim().toLowerCase().replace(/\s+/g, '_')
+    : 'maintenance';
+  const primaryGoal = ALLOWED_GOALS.includes(raw) ? raw : 'maintenance';
+  return { ...(goals || {}), primaryGoal };
+}
+
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, goals } = req.body;
     const isDbConnected = mongoose.connection.readyState === 1;
+    const safeGoals = normalizeGoals(goals);
 
     if (isDbConnected) {
       const existingUser = await User.findOne({ email });
@@ -22,7 +36,7 @@ export const registerUser = async (req, res) => {
         email,
         password,
         role: 'user',
-        goals: goals || { primaryGoal: 'Maintenance' }
+        goals: safeGoals
       });
 
       const token = jwt.sign({ userId: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -51,7 +65,7 @@ export const registerUser = async (req, res) => {
       status: 'active',
       profileImages: {},
       bodyMetrics: { heightCm: 175, weightKg: 70, age: 25, estimatedBmi: 22.8 },
-      goals: goals || { primaryGoal: 'Maintenance' },
+      goals: safeGoals,
       streakCount: 0,
       fitnessScore: 75
     };
@@ -65,7 +79,12 @@ export const registerUser = async (req, res) => {
       user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, status: newUser.status, goals: newUser.goals, bodyMetrics: newUser.bodyMetrics }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const isValidationError = error.name === 'ValidationError' || /validation failed/i.test(error.message || '');
+    res.status(isValidationError ? 400 : 500).json({
+      message: isValidationError
+        ? 'Invalid registration data — check required fields (name, email, password). Goals: primaryGoal must be one of maintenance | muscle_gain | weight_loss | athletic.'
+        : error.message
+    });
   }
 };
 

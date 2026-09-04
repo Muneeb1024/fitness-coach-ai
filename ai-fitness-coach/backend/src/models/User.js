@@ -78,7 +78,9 @@ const userSchema = new mongoose.Schema(
       weekStart: { type: String, default: '' }, // YYYY-MM-DD of Monday
       completed: { type: Boolean, default: false },
       completedAt: { type: Date }
-    }
+    },
+    passwordResetTokenHash: { type: String, default: null },
+    passwordResetExpiresAt: { type: Date, default: null }
   },
   { timestamps: true }
 );

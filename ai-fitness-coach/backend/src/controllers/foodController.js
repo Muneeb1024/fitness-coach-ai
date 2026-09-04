@@ -1,16 +1,17 @@
 import mongoose from 'mongoose';
+import { FoodLog } from '../models/FoodLog.js';
 import { memoryStore } from '../services/store.js';
+import { GEMINI_MODEL as PRIMARY_MODEL, GEMINI_BASE } from '../config/gemini.js';
 
-// In-memory food log store (per user, per day)
+// In-memory food log store — used ONLY as the offline/dev fallback.
+// When MongoDB is connected, food logs persist in the FoodLog collection and
+// survive server restarts.
 const foodLogCache = {};
 
 // Read key lazily at call time (not at module init) — ESM imports run before dotenv.config()
 const getApiKey = () => (process.env.GEMINI_API_KEY || '').trim();
 
-const PRIMARY_MODEL = 'gemini-3.6-flash';
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-
-// ── Call gemini-3.6-flash directly ──────────────────────────────────────────
+// ── Call the canonical Gemini model directly ─────────────────────────────────
 async function generateFoodAnalysis(imageBase64, mimeType, prompt) {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('GEMINI_API_KEY not set in .env');
@@ -149,6 +150,26 @@ export const logFood = async (req, res) => {
       },
     };
 
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      try {
+        const doc = await FoodLog.create({
+          userId: req.user._id,
+          date: todayStr,
+          foodName,
+          servingSize: entry.servingSize,
+          mealType: entry.mealType,
+          imageThumb: entry.imageThumb,
+          nutrition: entry.nutrition
+        });
+        return res.status(201).json({ success: true, entry: { ...entry, _id: doc._id } });
+      } catch (dbErr) {
+        console.warn('[Food Log DB Write Warning]', dbErr.message);
+        // Fall through to the in-memory cache as a degraded fallback.
+      }
+    }
+
     if (!foodLogCache[cacheKey]) foodLogCache[cacheKey] = [];
     foodLogCache[cacheKey].unshift(entry);
 
@@ -168,7 +189,35 @@ export const getTodayLog = async (req, res) => {
     const todayStr = new Date().toISOString().split('T')[0];
     const cacheKey = `${userId}_${todayStr}`;
 
-    const entries = foodLogCache[cacheKey] || [];
+    let entries = [];
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      try {
+        const docs = await FoodLog.find({ userId: req.user._id, date: todayStr })
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .lean();
+        entries = docs.map((d) => ({
+          id: String(d._id),
+          _id: d._id,
+          userId,
+          date: d.date,
+          loggedAt: d.createdAt?.toISOString?.() || new Date().toISOString(),
+          foodName: d.foodName,
+          servingSize: d.servingSize,
+          mealType: d.mealType,
+          imageThumb: d.imageThumb,
+          nutrition: d.nutrition
+        }));
+      } catch (dbErr) {
+        console.warn('[Food Log DB Read Warning]', dbErr.message);
+      }
+    }
+
+    if (entries.length === 0 && (!isDbConnected || foodLogCache[cacheKey])) {
+      entries = foodLogCache[cacheKey] || [];
+    }
 
     // Compute totals
     const totals = entries.reduce(
@@ -196,6 +245,15 @@ export const deleteFoodEntry = async (req, res) => {
     const { entryId } = req.params;
     const todayStr = new Date().toISOString().split('T')[0];
     const cacheKey = `${userId}_${todayStr}`;
+
+    const isDbConnected = mongoose.connection.readyState === 1;
+    if (isDbConnected) {
+      const { deletedCount } = await FoodLog.deleteOne({ _id: entryId, userId: req.user._id });
+      if (deletedCount === 0) {
+        return res.status(404).json({ message: 'Entry not found' });
+      }
+      return res.json({ success: true, message: 'Entry removed' });
+    }
 
     if (foodLogCache[cacheKey]) {
       foodLogCache[cacheKey] = foodLogCache[cacheKey].filter((e) => e.id !== entryId);

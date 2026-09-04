@@ -1,26 +1,47 @@
 /**
  * 🌱 FitVision AI — Database Seed Script
- * Run once on production to create the admin & demo user accounts.
+ * Run once to create the admin & demo user accounts.
  *
  * Usage:
  *   node src/seed.js
  *
- * Env vars required:
- *   MONGO_URI  — Your MongoDB Atlas connection string
- *   JWT_SECRET — (optional, only needed if you test tokens)
+ * Env vars:
+ *   MONGO_URI            — Required. Your MongoDB connection string.
+ *   ADMIN_PASSWORD       — Optional. Password for admin@fitvision.ai.
+ *                          If omitted, a strong random password is generated
+ *                          and printed to the console ONCE.
+ *   DEMO_USER_PASSWORD   — Optional. Password for the demo user@fitvision.ai.
+ *                          If omitted, a random password is printed once.
+ *   JWT_SECRET           — (optional, only needed if you test tokens)
+ *
+ * Security: the script never prints or stores a fixed password, and it never
+ * overwrites an existing account's password — it only creates missing ones.
  */
 
+import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { User } from './models/User.js';
 
 dotenv.config();
 
+function generatePassword() {
+  return crypto.randomBytes(9).toString('base64url'); // 12 chars
+}
+
+/** @param {{ passwordEnv?: string, email: string, role: string }} def */
+function resolvePassword(def) {
+  if (def.passwordEnv && process.env[def.passwordEnv]) {
+    return { password: process.env[def.passwordEnv], generated: false };
+  }
+  return { password: generatePassword(), generated: true };
+}
+
 const SEED_USERS = [
   {
     name: 'System Administrator',
     email: 'admin@fitvision.ai',
-    password: 'password123',
+    passwordEnv: 'ADMIN_PASSWORD',
     role: 'admin',
     status: 'active',
     fitnessScore: 100,
@@ -42,7 +63,7 @@ const SEED_USERS = [
   {
     name: 'John Doe (Demo)',
     email: 'user@fitvision.ai',
-    password: 'password123',
+    passwordEnv: 'DEMO_USER_PASSWORD',
     role: 'user',
     status: 'active',
     fitnessScore: 82,
@@ -85,13 +106,20 @@ async function seed() {
   for (const userData of SEED_USERS) {
     const existing = await User.findOne({ email: userData.email });
     if (existing) {
-      console.log(`⚠️   Skipped  → ${userData.email}  (already exists, role: ${existing.role})`);
+      console.log(`⚠️   Skipped  → ${userData.email}  (already exists, role: ${existing.role} — password untouched)`);
       continue;
     }
 
-    const user = new User(userData);
+    const { password, generated } = resolvePassword(userData);
+    const { passwordEnv, ...safeData } = userData;
+    const user = new User({ ...safeData, password });
     await user.save(); // pre('save') hook will bcrypt-hash the password automatically
     console.log(`✅  Created  → ${userData.email}  (role: ${userData.role})`);
+    if (generated) {
+      console.log(`    Initial password: ${password}   (shown once — change after first login)`);
+    } else {
+      console.log(`    Password taken from ${passwordEnv} environment variable.`);
+    }
   }
 
   console.log('\n🌱  Seeding complete.');

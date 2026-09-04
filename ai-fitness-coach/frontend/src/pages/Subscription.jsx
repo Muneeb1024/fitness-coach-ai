@@ -9,8 +9,8 @@ export default function Subscription() {
 
   const betaFeatures = [
     {
-      title: 'Full 4-Angle Posture Vision Scan',
-      desc: '33-keypoint automated landmark detection from Front, Back, Left, and Right photos with instant symmetry metrics.',
+      title: '4-Angle Body Snapshot & Metrics',
+      desc: 'Front, Back, Left and Right photos stored as your visual baseline, with BMI, body-fat estimate and healthy range calculated from your measurements.',
       icon: Camera,
       color: 'text-[#B8FD02]',
       bg: 'bg-[#B8FD02]/15 border-[#B8FD02]/40'
@@ -30,8 +30,8 @@ export default function Subscription() {
       bg: 'bg-[#B8FD02]/15 border-[#B8FD02]/40'
     },
     {
-      title: 'Real-Time Socket Habit Synchronization',
-      desc: 'Live logging of hydration, meals, sleep, and workouts with streak counters and instant cloud persistence.',
+      title: 'Live Plan Override Push',
+      desc: 'When your coach updates your plan in the admin studio, it appears on your dashboard instantly via Socket.IO — no refresh needed.',
       icon: Zap,
       color: 'text-[#FEF9F5]',
       bg: 'bg-[#0B0C0E] border-slate-700'
@@ -112,7 +112,7 @@ export default function Subscription() {
               View Your AI Plan <ArrowRight className="w-4 h-4" />
             </Link>
             <Link to="/onboarding" className="btn-secondary flex-1 sm:flex-initial text-xs sm:text-sm px-6 py-3">
-              New Photo Scan
+              Update My Snapshot
             </Link>
           </div>
         </div>

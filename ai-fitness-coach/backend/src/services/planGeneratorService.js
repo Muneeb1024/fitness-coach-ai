@@ -1,4 +1,5 @@
 // Plan Generator Service — no SDK needed, calculations only
+import { GEMINI_MODEL, GEMINI_BASE } from '../config/gemini.js';
 
 /**
  * Dynamic Fitness & Nutrition Calculation Engine
@@ -178,24 +179,26 @@ export const generateFitnessPlan = async ({ primaryGoal = 'Maintenance', targetW
   const meals = buildDynamicMeals(dailyCalories, macros, allergies);
   const workoutPlan = buildDynamicWorkoutSchedule(workoutPreference, primaryGoal);
 
-  // Try Gemini API if key is present
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && (apiKey.startsWith('AIza') || apiKey.length > 20)) {
-    const candidateModels = ['gemini-flash-latest', 'gemini-pro-latest', 'gemini-2.0-flash'];
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const prompt = `Generate a JSON fitness plan for a ${bodyMetrics.gender || 'person'} wanting ${primaryGoal}, weight ${bodyMetrics.weightKg || 70}kg, allergies: ${allergies.join(',') || 'none'}. Target calories: ${dailyCalories}. Return ONLY valid JSON with keys: title, dietPlan (dailyCalories, macros, meals), workoutPlan (frequencyDaysPerWeek, splitType, schedule).`;
-
-    for (const modelName of candidateModels) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+  // Try Gemini API via direct REST fetch (no SDK)
+  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+  if (apiKey && apiKey.length > 10) {
+    const aiPrompt = `Generate a JSON fitness plan for a ${bodyMetrics.gender || 'person'} wanting ${primaryGoal}, weight ${bodyMetrics.weightKg || 70}kg, allergies: ${allergies.join(',') || 'none'}. Target calories: ${dailyCalories}. Return ONLY valid JSON with keys: title, dietPlan (dailyCalories, macros, meals), workoutPlan (frequencyDaysPerWeek, splitType, schedule).`;
+    try {
+      const url = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: aiPrompt }] }] }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleanJson);
         if (parsed.dietPlan && parsed.workoutPlan) return parsed;
-      } catch (err) {
-        console.warn(`[Gemini Plan Gen Error with ${modelName}]:`, err.message);
       }
+    } catch (err) {
+      console.warn('[Gemini Plan Gen Error]:', err.message);
     }
   }
 

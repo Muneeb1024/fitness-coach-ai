@@ -3,6 +3,7 @@ import { Progress } from '../models/Progress.js';
 import { Plan } from '../models/Plan.js';
 import { User } from '../models/User.js';
 import { memoryStore } from '../services/store.js';
+import { GEMINI_MODEL, GEMINI_BASE } from '../config/gemini.js';
 
 // In-memory cache: { userId: { insight, date } }
 const insightCache = {};
@@ -73,7 +74,7 @@ Insight:`;
     const apiKey = (process.env.GEMINI_API_KEY || '').trim();
     if (apiKey && apiKey.length > 10) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+        const url = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
         const resp = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -46,7 +46,11 @@ const planSchema = new mongoose.Schema(
     isCustomOverride: { type: Boolean, default: false },
     overriddenByAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     overrideNotes: { type: String, default: '' },
-    version: { type: Number, default: 1 }
+    version: { type: Number, default: 1 },
+    // Monthly AI-regeneration budget tracking ('YYYY-MM' key + counter).
+    // Optional fields so existing plan documents are unaffected.
+    regenMonth: { type: String, default: null },
+    regenCount: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

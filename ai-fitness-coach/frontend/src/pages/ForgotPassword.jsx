@@ -7,30 +7,58 @@ import { KeyRound, Eye, EyeOff, ArrowLeft, CheckCircle2, Dumbbell } from 'lucide
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = enter email, 2 = set new password, 3 = done
+  const [step, setStep] = useState(1); // 1 = enter email, 2 = enter token + new password, 3 = done
   const [email, setEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [requestInfo, setRequestInfo] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Step 1 — request a single-use reset token (email only).
   const handleCheckEmail = async (e) => {
     e.preventDefault();
     if (!email.trim()) return toast.error('Please enter your email address');
-    setStep(2);
+
+    setLoading(true);
+    const toastId = toast.loading('Requesting a password reset token...');
+    try {
+      const res = await API.post('/auth/forgot-password', {
+        email: email.trim().toLowerCase(),
+      });
+      // Dev convenience: when the backend runs with RESET_TOKEN_DEBUG=true it
+      // returns the token in the payload. Production delivers it by email.
+      if (res.data?.devToken) {
+        setResetToken(res.data.devToken);
+      }
+      setRequestInfo(
+        res.data?.message ||
+          'If an account exists for that email, a reset token has been issued.'
+      );
+      setStep(2);
+      toast.success('Reset token issued.', { id: toastId });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not request a reset token. Please try again.', { id: toastId });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Step 2 — redeem the token with the new password.
   const handleReset = async (e) => {
     e.preventDefault();
+    if (!resetToken.trim()) return toast.error('Enter the reset token you received');
     if (!newPassword || newPassword.length < 6) return toast.error('Password must be at least 6 characters');
     if (newPassword !== confirmPassword) return toast.error('Passwords do not match');
 
     setLoading(true);
     const toastId = toast.loading('Resetting your password...');
     try {
-      await API.post('/auth/forgot-password', {
+      await API.post('/auth/reset-password', {
         email: email.trim().toLowerCase(),
+        token: resetToken.trim(),
         newPassword,
       });
       toast.success('Password reset successfully!', { id: toastId });
@@ -74,7 +102,7 @@ export default function ForgotPassword() {
             </h1>
             <p className="text-slate-400 text-sm">
               {step === 1 && 'Enter your account email to get started'}
-              {step === 2 && `Setting new password for ${email}`}
+              {step === 2 && `Confirm the reset token for ${email}`}
               {step === 3 && 'You can now sign in with your new password.'}
             </p>
           </div>
@@ -103,9 +131,25 @@ export default function ForgotPassword() {
             </form>
           )}
 
-          {/* Step 2: New Password */}
+          {/* Step 2: Token + New Password */}
           {step === 2 && (
             <form onSubmit={handleReset} className="space-y-4">
+              {requestInfo && (
+                <p className="text-xs text-emerald-400/90 bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-3 py-2.5 leading-relaxed">
+                  {requestInfo}
+                </p>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reset Token</label>
+                <input
+                  type="text" value={resetToken} onChange={(e) => setResetToken(e.target.value)}
+                  placeholder="Paste the reset token from your email" autoFocus
+                  className="w-full bg-[#0B0C0E] border border-slate-700 rounded-xl px-4 py-3 text-sm font-mono text-[#FEF9F5] placeholder-slate-500 focus:outline-none focus:border-[#B8FD02] focus:ring-1 focus:ring-[#B8FD02]/30 transition-all"
+                />
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Token is single-use and expires after 30 minutes. In development the token is also printed to the backend console.
+                </p>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">New Password</label>
                 <div className="relative">
@@ -152,7 +196,7 @@ export default function ForgotPassword() {
                 {loading ? <div className="w-4 h-4 border-2 border-[#0B0C0E] border-t-transparent rounded-full animate-spin" /> : <KeyRound className="w-4 h-4" />}
                 Reset Password
               </button>
-              <button type="button" onClick={() => setStep(1)} className="w-full text-slate-400 hover:text-[#B8FD02] text-sm transition-colors">← Change email</button>
+              <button type="button" onClick={() => { setStep(1); setResetToken(''); }} className="w-full text-slate-400 hover:text-[#B8FD02] text-sm transition-colors">← Change email</button>
             </form>
           )}
 

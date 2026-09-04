@@ -19,15 +19,11 @@ export default function Onboarding() {
   const [primaryGoal, setPrimaryGoal] = useState('muscle_gain');
   const [targetWeightKg, setTargetWeightKg] = useState(75);
   const [workoutPreference, setWorkoutPreference] = useState('Gym');
-  const [allergies, setAllergies] = useState('Peanuts, Dairy');
+  const [allergies, setAllergies] = useState('');
 
-  // Images state (Front, Back, Left, Right)
-  const [images, setImages] = useState({
-    front: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80',
-    back: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=80',
-    left: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-    right: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80'
-  });
+  // Images state (Front, Back, Left, Right) — optional body snapshot.
+  // No stock photos are pre-filled; users upload their own or skip.
+  const [images, setImages] = useState({ front: null, back: null, left: null, right: null });
 
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +33,7 @@ export default function Onboarding() {
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
-    const toastId = toast.loading('Running SoftnoveX MediaPipe analysis & generating Gemini AI plan...');
+    const toastId = toast.loading('Saving your body snapshot & generating your Gemini AI plan...');
 
     try {
       const res = await API.post('/user/onboarding', {
@@ -53,7 +49,7 @@ export default function Onboarding() {
       });
 
       updateUserState(res.data.user);
-      toast.success('AI Biometric Analysis Complete! 🎉', { id: toastId });
+      toast.success('Profile saved & AI plan generated! 🎉', { id: toastId });
       navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to complete AI onboarding.', { id: toastId });
@@ -67,7 +63,7 @@ export default function Onboarding() {
       <div className="flex items-center justify-between mb-8">
         {[
           { num: 1, label: 'Biometric Metrics' },
-          { num: 2, label: '4-Angle Pose Scan' },
+          { num: 2, label: 'Body Snapshot (Optional)' },
           { num: 3, label: 'Goals & Allergies' }
         ].map((s) => (
           <div key={s.num} className="flex items-center gap-3">
@@ -101,7 +97,7 @@ export default function Onboarding() {
               <Sliders className="w-3 h-3" /> Step 1 of 3
             </span>
             <h2 className="text-2xl font-bold text-white">Biometric Baseline</h2>
-            <p className="text-sm text-slate-400 mt-1">Provide your initial measurements for landmark calibration & BMI modeling</p>
+            <p className="text-sm text-slate-400 mt-1">Provide your initial measurements — BMI, body-fat estimate and healthy range are calculated from these</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -168,13 +164,13 @@ export default function Onboarding() {
             <span className="badge-cyan inline-flex items-center gap-1.5 mb-2">
               <Camera className="w-3 h-3" /> Step 2 of 3
             </span>
-            <h2 className="text-2xl font-bold text-white">4-Angle Computer Vision Scan</h2>
-            <p className="text-sm text-slate-400 mt-1">Upload Front, Back, Left, and Right posture photos for 33-point pose detection</p>
+            <h2 className="text-2xl font-bold text-white">Body Snapshot (Optional)</h2>
+            <p className="text-sm text-slate-400 mt-1">Upload Front, Back, Left, and Right photos to build your visual baseline — or skip and add them later from your profile</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-3">
             <ShieldAlert className="w-5 h-5 shrink-0 text-amber-400" />
-            <span>Encrypted transmission: Photos are processed strictly for biometric alignment and posture analysis.</span>
+            <span>Your photos are stored privately as your visual snapshot. BMI, body-fat and posture metrics are estimates calculated from your measurements — vision-based landmark analysis is not enabled yet.</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

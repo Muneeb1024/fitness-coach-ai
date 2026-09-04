@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/((?!api/|assets/|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|mjs|woff2?|ttf|eot|mp4|webm|json)$).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

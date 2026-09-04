@@ -21,7 +21,7 @@
 <br/>
 
 > **FitVision AI** is not just another fitness app.  
-> It is a full-stack, production-grade AI fitness intelligence platform that uses **Google Gemini AI**, **computer vision body analysis**, **RAG-powered coaching**, and a **complete admin governance suite** — all in one product.
+> It is a full-stack, production-grade AI fitness intelligence platform that uses **Google Gemini AI**, **photo-based body snapshot + AI-estimated metrics**, **RAG-powered coaching**, and a **complete admin governance suite** — all in one product.
 
 <br/>
 
@@ -35,12 +35,12 @@
 
 Most fitness apps give you static plans written by a nutritionist once. **FitVision AI** does this:
 
-- 📸 **Scans your body** using 4-angle posture photo upload and computer vision
+- 📸 **Takes your visual baseline** — optional 4-angle body photo upload, with body metrics estimated from your measurements (vision landmark analysis is on the roadmap)
 - 🤖 **Generates a fully personalized** diet + workout plan using **Google Gemini AI** — every plan is unique to your body metrics, allergies, goals, and workout preference
 - 💬 **Coaches you in real-time** via an AI chat assistant that is RAG-grounded on *your actual plan* — not generic fitness advice
 - 📊 **Tracks your progress** daily with streaks, fitness scores, water intake, sleep, and meal completion
 - 👑 **Admin control center** — a full governance console with live analytics, user moderation, AI prompt tuning, and plan override
-- 💳 **Subscription tiers** — Free, Pro ($14.99/mo), and Elite VIP ($29.99/mo) with real upgrade flow
+- 💳 **Subscription tiers** — Free, Pro Coach, and Elite VIP. Upgrades are **simulated in-product during the public beta (no payment processor connected, \$0)**
 
 ---
 
@@ -50,12 +50,12 @@ Most fitness apps give you static plans written by a nutritionist once. **FitVis
 
 | Feature | Description |
 |---|---|
-| **AI Onboarding** | 4-angle posture photo upload (Front, Back, Left, Right) with live preview |
+| **AI Onboarding** | Optional 4-angle body snapshot photo upload (Front, Back, Left, Right) + metrics estimated from your measurements |
 | **AI Plan Generation** | Google Gemini generates a personalized diet & workout plan based on your body, goals, and allergies |
 | **RAG-Powered AI Coach** | Chat with an AI coach grounded in your real plan, macros, streak, and health history |
 | **Daily Progress Tracker** | Log meals, water intake (ml), sleep hours, and workout completion |
 | **Streak & Fitness Score** | Gamified streak system and dynamic fitness score (0–100) |
-| **Subscription Model** | 3-tier membership — Starter Free, Pro Coach, Elite VIP — with monthly/annual billing |
+| **Subscription Model** | 3-tier membership — Free, Pro Coach, Elite VIP. Upgrade is simulated in-product; no payment processor is connected yet |
 | **Plan Regeneration** | Instantly regenerate AI plan if you want a fresh approach |
 | **Responsive Design** | Fully responsive across desktop, tablet, and mobile |
 
@@ -63,11 +63,11 @@ Most fitness apps give you static plans written by a nutritionist once. **FitVis
 
 | Feature | Description |
 |---|---|
-| **Live Analytics Dashboard** | Real-time KPI cards: Total Users, Active Plans, Avg. Fitness Score, Monthly Revenue + Recharts graphs |
+| **Live Analytics Dashboard** | Real KPI cards from live backend queries: Total Users, Active Accounts, Avg. Fitness Score, Plans Generated + 7-day activity trend charts |
 | **User Management** | Full searchable/filterable user directory — instant Ban/Unban, role badges, profile modals |
-| **AI Output Monitor** | Inspect every AI-generated plan, flag low-quality outputs, and live-edit the Gemini System Prompt Template |
+| **AI Output Monitor** | Inspect the latest AI-generated plans (read-only) and live-edit the Gemini System Prompt Template |
 | **Plan Override Studio** | Manually override any user's plan: set custom calories, macros, workout split — push via Socket.IO |
-| **Content Moderation** | Review flagged AI chat queries + approve/reject 4-angle body photos |
+| **Content Moderation** | Review and resolve flagged AI chat queries (body-photo review queue not wired yet) |
 | **System Audit Log** | Timestamped log of every admin action |
 | **Dedicated Admin Login** | Separate admin portal at `/admin/login` — role-enforced, blocks regular users |
 
@@ -108,7 +108,7 @@ Most fitness apps give you static plans written by a nutritionist once. **FitVis
 | Service | Role |
 |---|---|
 | **Vercel** | Frontend hosting (CDN-distributed, auto-deploy from GitHub) |
-| **Render** | Backend hosting (persistent Node.js server) |
+| **Backend Host** | Persistent Node.js server — hosting target is configured by the founder (see OPS-REPORT.md) |
 | **MongoDB Atlas** | Cloud-hosted MongoDB cluster |
 | **GitHub** | Version control + CI/CD pipeline |
 
@@ -182,14 +182,22 @@ npm run dev        # Starts on http://localhost:3000
 
 ---
 
-## 🔑 Demo Credentials
+## 🔑 Demo Access (Development Only)
 
-| Role | Email | Password | Access |
-|---|---|---|---|
-| 👤 **User** | `user@fitvision.ai` | `password123` | `/dashboard` |
-| 🛡️ **Admin** | `admin@fitvision.ai` | `password123` | `/admin` |
+There are **no fixed demo passwords** — fixed credentials were removed for security.
 
-> Admin panel is accessed via **`/admin/login`** — it is intentionally separated from the regular login flow.
+- **In-memory fallback mode** (no MongoDB reachable): the backend prints randomly
+  generated passwords to its console at boot for `user@fitvision.ai` (user) and
+  `admin@fitvision.ai` (admin).
+- **MongoDB mode**: create the admin **once** by starting the backend with
+  `ADMIN_BOOTSTRAP=true` (optionally `ADMIN_PASSWORD=<your choice>`). The initial
+  password is printed to the console once and is never reset on later boots.
+
+> Admin panel is accessed via **`/admin/login`** — it is intentionally separated
+> from the regular login flow.
+>
+> See [`backend/SECURITY.md`](ai-fitness-coach/backend/SECURITY.md) for the
+> production security checklist (rotate secrets, verify email, create the real admin).
 
 ---
 
@@ -201,7 +209,7 @@ fitness-coach-ai/
 │   └── src/
 │       ├── pages/
 │       │   ├── Landing.jsx          # Hero landing page
-│       │   ├── Login.jsx            # User sign-in with quick demo fill
+│       │   ├── Login.jsx            # User sign-in
 │       │   ├── Signup.jsx           # User registration
 │       │   ├── Onboarding.jsx       # 4-angle photo upload + body metrics
 │       │   ├── Dashboard.jsx        # Main user dashboard
@@ -252,7 +260,7 @@ fitness-coach-ai/
 
 ## 🗺️ Roadmap — What's Coming Next
 
-- [ ] **Real-time AI Vision Analysis** — Live webcam-based posture analysis using MediaPipe running in-browser
+- [ ] **Real-time AI Vision Analysis** — Live webcam/photo landmark posture analysis (e.g. MediaPipe in-browser). NOT implemented yet — current metrics are measurement-based estimates
 - [ ] **Push Notifications** — Daily reminders for water, meals, and workouts via web push
 - [ ] **Wearable Integration** — Sync with Apple Health, Google Fit, and Fitbit APIs
 - [ ] **Social Features** — Community leaderboards, challenge groups, progress sharing

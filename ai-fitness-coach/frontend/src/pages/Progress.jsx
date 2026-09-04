@@ -14,8 +14,12 @@ export default function Progress() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [beforePhoto] = useState('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80');
-  const [afterPhoto] = useState('https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=80');
+  // Visual comparison uses the member's OWN uploaded snapshot (no stock photos).
+  const ownPhoto = ['front', 'back', 'left', 'right']
+    .map((k) => user?.profileImages?.[k])
+    .find(Boolean) || null;
+  const [beforePhoto] = useState(ownPhoto);
+  const [afterPhoto] = useState(ownPhoto);
 
   useEffect(() => {
     fetchHistory();
@@ -177,9 +181,16 @@ export default function Progress() {
               <span className="text-[#B8FD02]">Front Angle</span>
             </div>
             <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-slate-800 relative group bg-[#0B0C0E]">
-              <img src={beforePhoto} alt="Before" className="w-full h-full object-cover" />
+              {beforePhoto ? (
+                <img src={beforePhoto} alt="Your baseline snapshot" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
+                  <Camera className="w-6 h-6 text-slate-500" />
+                  <p className="text-[11px] text-slate-400 leading-relaxed">Add a body snapshot in Profile → Body Snapshot to enable visual comparison</p>
+                </div>
+              )}
               <div className="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-[#0B0C0E]/90 text-xs font-bold text-slate-300 border border-slate-700">
-                Initial Photo Scan
+                Your Baseline Snapshot
               </div>
             </div>
           </div>
@@ -190,21 +201,29 @@ export default function Progress() {
               <span className="text-[#B8FD02]">Front Angle</span>
             </div>
             <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-slate-800 relative group bg-[#0B0C0E]">
-              <img src={afterPhoto} alt="After" className="w-full h-full object-cover" />
+              {afterPhoto ? (
+                <img src={afterPhoto} alt="Your latest snapshot" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
+                  <Camera className="w-6 h-6 text-slate-500" />
+                  <p className="text-[11px] text-slate-400 leading-relaxed">Update your snapshot over time and compare it here side by side</p>
+                </div>
+              )}
               <div className="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-[#0B0C0E]/90 text-xs font-black text-[#B8FD02] border border-[#B8FD02]/40">
-                Week 4 Biometric Update
+                Your Latest Snapshot
               </div>
             </div>
           </div>
         </div>
 
-        {/* AI Insight Box */}
+        {/* Consistency Note */}
         <div className="p-6 rounded-2xl bg-[#0B0C0E] border border-[#B8FD02]/30 space-y-2">
           <div className="flex items-center gap-2 text-[#B8FD02] font-black text-sm uppercase tracking-wider">
-            <Sparkles className="w-4 h-4" /> SoftnoveX Computer Vision Evaluation
+            <Sparkles className="w-4 h-4" /> Consistency Snapshot
           </div>
           <p className="text-slate-300 text-sm leading-relaxed">
-            "Based on landmark alignment and your {user?.streakCount || 0}-day streak, posture stability in upper shoulders has improved by approximately 3.4%. Core structural symmetry shows consistent positive adaptation."
+            Your current streak is {user?.streakCount || 0} day{user?.streakCount === 1 ? '' : 's'}. Photo-to-photo visual comparison and vision-based
+            body measurements are not available yet — keep logging your habits and updating your snapshot to track real progress over time.
           </p>
         </div>
       </motion.div>

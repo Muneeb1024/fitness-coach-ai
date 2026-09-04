@@ -35,15 +35,14 @@ export default function AdminDashboard() {
 
   const analytics = data?.analytics || {};
 
-  const trendData = [
-    { day: 'Mon', users: 12, plans: 18, chats: 45 },
-    { day: 'Tue', users: 19, plans: 24, chats: 62 },
-    { day: 'Wed', users: 28, plans: 35, chats: 84 },
-    { day: 'Thu', users: 34, plans: 42, chats: 96 },
-    { day: 'Fri', users: 45, plans: 58, chats: 128 },
-    { day: 'Sat', users: 52, plans: 67, chats: 145 },
-    { day: 'Sun', users: 60, plans: 78, chats: 172 },
-  ];
+  // Real 7-day trend computed by the backend — never hardcoded sample data.
+  const trendData = data?.analytics?.weeklyTrend || [];
+  const hasTrend = trendData.some((d) => (d.users || 0) + (d.plans || 0) + (d.chats || 0) > 0);
+  const noTrendMessage = (
+    <div className="h-[220px] flex items-center justify-center text-slate-500 text-xs uppercase tracking-wider">
+      No activity recorded in the past 7 days
+    </div>
+  );
 
   const filteredLogs = (data?.recentAdminLogs || []).filter((log) => {
     if (logFilter === 'ALL') return true;
@@ -78,7 +77,7 @@ export default function AdminDashboard() {
               Platform & AI Analytics
             </h1>
             <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
-              Live telemetry on user retention, Gemini plan generations, RAG chat volume & system health
+              Current platform telemetry — refreshed on demand
             </p>
           </div>
 
@@ -102,9 +101,9 @@ export default function AdminDashboard() {
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Members</span>
               <Users className="w-5 h-5 text-[#B8FD02]" />
             </div>
-            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.totalUsers || 1}</p>
+            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.totalUsers ?? 0}</p>
             <p className="text-xs text-[#B8FD02] flex items-center gap-1 font-bold">
-              <TrendingUp className="w-3.5 h-3.5" /> {analytics.activeUsers || 1} Active Accounts
+              <TrendingUp className="w-3.5 h-3.5" /> {analytics.activeUsers ?? 0} Active Accounts
             </p>
           </motion.div>
 
@@ -116,8 +115,11 @@ export default function AdminDashboard() {
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Plans Generated</span>
               <Sparkles className="w-5 h-5 text-cyan-400" />
             </div>
-            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.totalPlansGenerated || 1}</p>
-            <p className="text-xs text-cyan-400 font-bold">{analytics.planCompletionRate || 84.2}% Completion Rate</p>
+            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.totalPlansGenerated ?? 0}</p>
+            <p className="text-xs text-cyan-400 font-bold">
+              {analytics.planCompletionRate == null ? '—' : `${analytics.planCompletionRate}%`} Completion Rate
+              {analytics.planCompletionRate == null && <span className="text-slate-500 normal-case"> (not tracked yet)</span>}
+            </p>
           </motion.div>
 
           <motion.div
@@ -128,7 +130,7 @@ export default function AdminDashboard() {
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg. Fitness Score</span>
               <Activity className="w-5 h-5 text-amber-400" />
             </div>
-            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.averageFitnessScore || 78.4}</p>
+            <p className="text-3xl font-black text-[#FEF9F5]">{analytics.averageFitnessScore ?? '—'}</p>
             <p className="text-xs text-amber-400 font-bold">Out of 100 Health Index</p>
           </motion.div>
 
@@ -155,10 +157,12 @@ export default function AdminDashboard() {
                 <BarChart2 className="w-4 h-4 text-[#B8FD02]" /> Weekly Platform Volume & AI Usage
               </h3>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#B8FD02]/15 text-[#B8FD02] border border-[#B8FD02]/40">
-                Live Sync
+                Refreshed on demand
               </span>
             </div>
 
+            {!hasTrend && noTrendMessage}
+            {hasTrend && (
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendData}>
                 <defs>
@@ -174,6 +178,7 @@ export default function AdminDashboard() {
                 <Area type="monotone" dataKey="plans" stroke="#38bdf8" fill="transparent" strokeWidth={2} name="Plans Generated" />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </div>
 
           {/* Bar Chart */}
@@ -183,10 +188,12 @@ export default function AdminDashboard() {
                 <Sparkles className="w-4 h-4 text-cyan-400" /> Daily Plan Generations Trend
               </h3>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/40">
-                Gemini 1.5 Flash
+                Gemini 2.5 Flash
               </span>
             </div>
 
+            {!hasTrend && noTrendMessage}
+            {hasTrend && (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={trendData} barSize={24}>
                 <XAxis dataKey="day" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -195,6 +202,7 @@ export default function AdminDashboard() {
                 <Bar dataKey="plans" fill="#B8FD02" radius={[8, 8, 0, 0]} name="Plans" />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
 
         </div>

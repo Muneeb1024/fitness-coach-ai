@@ -12,25 +12,9 @@ export default function Moderation() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'photos'
 
-  // Sample photo moderation dataset
-  const [userPhotos, setUserPhotos] = useState([
-    {
-      _id: 'photo_1',
-      userName: 'John Doe',
-      userEmail: 'user@fitvision.ai',
-      angle: 'Front View',
-      url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80',
-      status: 'Pending Review'
-    },
-    {
-      _id: 'photo_2',
-      userName: 'John Doe',
-      userEmail: 'user@fitvision.ai',
-      angle: 'Back View',
-      url: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=80',
-      status: 'Pending Review'
-    }
-  ]);
+  // No body-photo review pipeline is wired to the backend yet — this queue is
+  // intentionally empty instead of showing fabricated sample uploads.
+  const [userPhotos, setUserPhotos] = useState([]);
 
   useEffect(() => {
     fetchFlaggedChats();
@@ -50,7 +34,7 @@ export default function Moderation() {
   const handleResolveChatFlag = async (chatId) => {
     const toastId = toast.loading('Resolving chat flag...');
     try {
-      await API.put(`/admin/chats/${chatId}/moderate`);
+      await API.put(`/admin/chat-flags/${chatId}/resolve`);
       setFlaggedLogs((prev) => prev.filter((c) => c._id !== chatId));
       toast.success('Chat query flag resolved!', { id: toastId });
     } catch (err) {
@@ -58,10 +42,7 @@ export default function Moderation() {
     }
   };
 
-  const handleDeletePhoto = (photoId) => {
-    setUserPhotos((prev) => prev.filter((p) => p._id !== photoId));
-    toast.success('Uploaded body photo removed from server!');
-  };
+
 
   return (
     <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-7xl mx-auto overflow-x-hidden min-w-0 text-[#FEF9F5]">
@@ -148,31 +129,13 @@ export default function Moderation() {
 
         {/* TAB 2: BODY PHOTO MODERATION */}
         {activeTab === 'photos' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {userPhotos.map((photo) => (
-              <div key={photo._id} className="glass-card p-4 rounded-3xl bg-[#16181C] border border-slate-800 space-y-3">
-                <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-[#0B0C0E] relative border border-slate-800">
-                  <img src={photo.url} alt={photo.angle} className="w-full h-full object-cover" />
-                  <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#0B0C0E]/80 text-[#B8FD02] backdrop-blur-md border border-[#B8FD02]/30">
-                    {photo.angle}
-                  </span>
-                </div>
-
-                <div className="text-xs space-y-1">
-                  <p className="font-bold text-[#FEF9F5]">{photo.userName}</p>
-                  <p className="text-[11px] text-slate-400">{photo.userEmail}</p>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1 border-t border-slate-800">
-                  <button
-                    onClick={() => handleDeletePhoto(photo._id)}
-                    className="w-full py-2 rounded-xl bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/30 text-rose-400 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Remove Image
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="glass-panel p-12 text-center rounded-3xl bg-[#16181C] border border-slate-800 space-y-2">
+            <Camera className="w-10 h-10 text-slate-500 mx-auto" />
+            <h3 className="font-black text-[#FEF9F5] text-base uppercase">No Photo Review Queue</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              Uploaded body photos are not sent through a moderation pipeline yet, so there is nothing to review here.
+              This queue will populate once photo storage & review are wired up.
+            </p>
           </div>
         )}
 

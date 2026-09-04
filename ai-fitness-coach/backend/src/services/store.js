@@ -1,13 +1,36 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 
 // In-Memory Fallback Storage
+//
+// Security: demo accounts exist ONLY outside production, so the app stays
+// demoable without MongoDB. In production the fallback store starts with NO
+// accounts — a pre-known demo/admin credential can never grant access if the
+// database is ever unreachable. Demo passwords are randomly generated at boot
+// and printed to the console once (dev convenience only).
+
+const isProduction = process.env.NODE_ENV === 'production';
+const demoUserPassword = process.env.DEMO_USER_PASSWORD || crypto.randomBytes(9).toString('base64url');
+const demoAdminPassword = process.env.DEMO_ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
+
+function logDemoAccounts() {
+  if (isProduction) return;
+  console.log('');
+  console.log('\x1b[33m[Dev Demo]\x1b[0m In-memory fallback active (no MongoDB connection).');
+  console.log('  user@fitvision.ai  → user  / ' + demoUserPassword);
+  console.log('  admin@fitvision.ai → admin / ' + demoAdminPassword);
+  console.log('  Demo accounts exist only while this process runs.');
+}
+
+logDemoAccounts();
+
 export const memoryStore = {
-  users: [
+  users: isProduction ? [] : [
     {
       _id: 'user_demo_1',
       name: 'John Doe (Demo)',
       email: 'user@fitvision.ai',
-      passwordHash: bcrypt.hashSync('password123', 10),
+      passwordHash: bcrypt.hashSync(demoUserPassword, 10),
       role: 'user',
       status: 'active',
       profileImages: {
@@ -27,7 +50,7 @@ export const memoryStore = {
       _id: 'admin_demo_1',
       name: 'System Administrator',
       email: 'admin@fitvision.ai',
-      passwordHash: bcrypt.hashSync('password123', 10),
+      passwordHash: bcrypt.hashSync(demoAdminPassword, 10),
       role: 'admin',
       status: 'active',
       profileImages: {},

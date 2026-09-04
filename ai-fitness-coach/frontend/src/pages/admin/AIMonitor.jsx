@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import API from '../../services/api';
 import {
-  Sparkles, Eye, Flag, Code2, Save, RotateCcw,
+  Sparkles, Eye, Code2, Save, RotateCcw,
   Zap, ShieldCheck, Terminal, Cpu, Sliders
 } from 'lucide-react';
 
@@ -38,27 +38,12 @@ export default function AIMonitor() {
   const fetchPlans = async () => {
     try {
       const res = await API.get('/admin/analytics');
-      setPlans(res.data.recentPlans || [
-        {
-          _id: 'plan_sample_1',
-          title: 'Customized Muscle Gain AI Plan (Gym)',
-          dietPlan: { dailyCalories: 2400, macros: { proteinGrams: 165, carbsGrams: 240, fatGrams: 75 } },
-          workoutPlan: { splitType: 'Upper / Lower Split', frequencyDaysPerWeek: 4 },
-          flagged: false
-        }
-      ]);
+      setPlans(res.data.recentPlans || []);
     } catch (err) {
       toast.error('Could not fetch AI plans');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleToggleFlag = (planId) => {
-    setPlans((prev) =>
-      prev.map((p) => (p._id === planId ? { ...p, flagged: !p.flagged } : p))
-    );
-    toast.success('Plan quality rating updated!');
   };
 
   const handleSavePrompt = async () => {
@@ -79,9 +64,9 @@ export default function AIMonitor() {
     setTesting(true);
     setTestResponse('');
     try {
-      const res = await API.post('/chat/ask', { message: testQuery });
+      const res = await API.post('/chat/message', { message: testQuery });
       setTestResponse(res.data.reply || 'No response returned.');
-      toast.success('AI response simulated successfully!');
+      toast.success('AI response received successfully!');
     } catch (err) {
       toast.error('Test simulation failed.');
     } finally {
@@ -101,7 +86,7 @@ export default function AIMonitor() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="px-3 py-1 rounded-full bg-[#B8FD02]/15 border border-[#B8FD02]/40 text-[#B8FD02] text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5" /> Gemini 1.5 LLM Engine
+                <Cpu className="w-3.5 h-3.5" /> Gemini 2.5 Flash Engine
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-[#FEF9F5] tracking-tight uppercase">
@@ -137,6 +122,17 @@ export default function AIMonitor() {
         {/* TAB 1: GENERATED PLAN OUTPUTS */}
         {activeTab === 'outputs' && (
           <div className="space-y-4">
+            <p className="text-xs text-slate-500">
+              Latest generated plans (read-only). Output quality flagging & persistence are not wired yet —
+              moderation of AI responses happens in the Safety & Moderation console.
+            </p>
+            {plans.length === 0 ? (
+              <div className="glass-panel p-12 text-center rounded-3xl bg-[#16181C] border border-slate-800 space-y-2">
+                <Sparkles className="w-10 h-10 text-[#B8FD02] mx-auto" />
+                <h3 className="font-black text-[#FEF9F5] text-base uppercase">No AI Plans Generated Yet</h3>
+                <p className="text-xs text-slate-400">Generated plan outputs will appear here once members onboard.</p>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {plans.map((p) => (
                 <div key={p._id} className="glass-card p-6 rounded-3xl bg-[#16181C] border border-slate-800 space-y-4">
@@ -144,17 +140,7 @@ export default function AIMonitor() {
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#B8FD02]/15 text-[#B8FD02] border border-[#B8FD02]/30">
                       {p.workoutPlan?.splitType || 'Full Body Split'}
                     </span>
-                    <button
-                      onClick={() => handleToggleFlag(p._id)}
-                      className={`px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border ${
-                        p.flagged
-                          ? 'bg-rose-500/15 text-rose-400 border-rose-500/40 hover:bg-rose-500/25'
-                          : 'bg-[#0B0C0E] text-slate-400 border-slate-800 hover:text-white'
-                      }`}
-                    >
-                      <Flag className="w-3.5 h-3.5" />
-                      {p.flagged ? 'Flagged Inaccurate' : 'Flag Output'}
-                    </button>
+                    <span className="text-[10px] text-slate-500 font-mono">v{p.version || 1}</span>
                   </div>
 
                   <div>
@@ -172,6 +158,7 @@ export default function AIMonitor() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -184,7 +171,7 @@ export default function AIMonitor() {
                   System Prompt Template Configuration <Code2 className="w-5 h-5 text-[#B8FD02]" />
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Dynamically tune instructions injected into Gemini 1.5 API for plan generation & real-time RAG coaching
+                  Dynamically tune the system prompt injected into the Gemini API for plan generation & RAG coaching
                 </p>
               </div>
 
@@ -221,7 +208,7 @@ export default function AIMonitor() {
                 Live AI Prompt Sandbox <Terminal className="w-5 h-5 text-[#B8FD02]" />
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Simulate queries directly against the current Gemini prompt template without altering user state
+                Test queries against the live chat endpoint (uses the signed-in account's context; replies are logged like a normal chat)
               </p>
             </div>
 
@@ -252,7 +239,7 @@ export default function AIMonitor() {
               {testResponse && (
                 <div className="p-4 rounded-2xl bg-[#0B0C0E] border border-[#B8FD02]/30 space-y-2">
                   <span className="text-[10px] font-black text-[#B8FD02] uppercase tracking-wider">
-                    Simulated Gemini Response
+                    Model Response
                   </span>
                   <p className="text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
                     {testResponse}

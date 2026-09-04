@@ -13,7 +13,6 @@ import {
   deleteUser,
   resetUserPassword
 } from '../controllers/adminController.js';
-import { forgotPassword } from '../controllers/adminController.js';
 import { verifyJWT } from '../middleware/verifyJWT.js';
 import { checkRole } from '../middleware/checkRole.js';
 

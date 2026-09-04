@@ -36,7 +36,12 @@ export default function ChatWidget() {
         ]);
       }
     } catch (err) {
-      console.error('[Fetch Chat Error]', err);
+      setMessages([
+        {
+          sender: 'ai',
+          text: `Hi ${user?.name?.split(' ')[0] || 'there'}! I couldn't load your previous conversation, so we're starting fresh. Ask me anything!`
+        }
+      ]);
     }
   };
 
@@ -61,7 +66,14 @@ export default function ChatWidget() {
         setFlagAlert('Note: Your query triggered safety moderation and was logged for review.');
       }
     } catch (err) {
-      setMessages((prev) => [...prev, { sender: 'ai', text: 'Encountered an issue processing your query. Please try again in a moment.' }]);
+      const serverMsg = err.response?.data?.message;
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: serverMsg || 'Encountered an issue processing your query. Please try again in a moment.'
+        }
+      ]);
     } finally {
       setLoading(false);
     }

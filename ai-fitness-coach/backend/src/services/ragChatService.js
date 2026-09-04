@@ -4,6 +4,7 @@ import { Progress } from '../models/Progress.js';
 import { memoryStore } from './store.js';
 
 import { getSystemPrompt, setSystemPrompt } from './promptTemplateService.js';
+import { GEMINI_MODEL, GEMINI_BASE } from '../config/gemini.js';
 
 /**
  * RAG Chat Service: Injects user's profile, diet/workout plan, and recent daily progress into prompt context.
@@ -160,7 +161,7 @@ Response:`;
 
   if (useGemini) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+      const url = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
